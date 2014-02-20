@@ -2,7 +2,7 @@ package trayhost_test
 
 import (
 	"fmt"
-	"github.com/cratonica/trayhost"
+	"github.com/overlordtm/trayhost"
 	"runtime"
 )
 

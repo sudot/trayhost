@@ -47,9 +47,20 @@ import "C"
 
 var isExiting bool
 var urlPtr unsafe.Pointer
+var menuItems MenuItems
+
+type MenuItem struct {
+	Title    string
+	Disabled bool
+	Handler  func()
+}
+
+type MenuItems []MenuItem
 
 // Run the host system's event loop
-func EnterLoop(title string, imageData []byte) {
+func Initialize(title string, imageData []byte, items MenuItems) {
+	menuItems = items
+
 	defer C.free(urlPtr)
 
 	cTitle := C.CString(title)
@@ -68,20 +79,37 @@ func EnterLoop(title string, imageData []byte) {
 		cImageDataSlice[i] = C.uchar(v)
 	}
 
-	// Enter the loop
-	C.native_loop(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
+	// Initialize menu
+	C.init(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
 
+	for id, item := range menuItems {
+		addMenuItem(id, item)
+	}
+
+}
+
+func EnterLoop() {
+	C.native_loop()
 	// If reached, user clicked Exit
 	isExiting = true
 }
 
-// Set the URL that the tray icon will open in a browser
-func SetUrl(url string) {
-	if isExiting {
-		return
+func Exit() {
+	C.exit_loop()
+}
+
+func addMenuItem(id int, item MenuItem) {
+	if item.Title == "" {
+		C.add_separator_item()
+	} else {
+		C.add_menu_item((C.int)(id), C.CString(item.Title), cbool(item.Disabled))
 	}
-	cs := C.CString(url)
-	C.free(urlPtr)
-	urlPtr = unsafe.Pointer(cs)
-	C.set_url(cs)
+}
+
+func cbool(b bool) C.int {
+	if b {
+		return 1
+	} else {
+		return 0
+	}
 }

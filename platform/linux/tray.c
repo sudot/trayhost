@@ -14,43 +14,29 @@ static char *icon = NULL;
 static size_t iconSize = 0;
 static const char *menu_title = NULL;
 static const char *url = NULL;
+static GtkWidget *menu = NULL;
 char tmpIconNameBuf[32];
 
+// implemented in go
+extern void tray_callback(int itemId);
 
-static void handle_open(GtkStatusIcon *status_icon, gpointer user_data)
+// internal wrapper for go callback
+void _tray_callback(GtkMenuItem *item, gpointer user_data)
 {
-    pid_t pid = fork();
-    if (pid == 0)
-    {
-        execlp("xdg-open", "xdg-open", url, (char*)NULL);
-    }
+  tray_callback(GPOINTER_TO_INT(user_data));
 }
 
-static void tray_exit(GtkMenuItem *item, gpointer user_data)
-{
-    gtk_main_quit();
+void add_menu_item(int id, const char* title, int disabled) {
+  GtkWidget *item = gtk_menu_item_new_with_label(title);
+  if (disabled == TRUE) {
+     gtk_widget_set_sensitive(item, FALSE);
+  }
+  g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_tray_callback), GINT_TO_POINTER(id));
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 }
 
-void* create_menu()
-{
-  GtkWidget *menu = gtk_menu_new();
-
-  GtkWidget *titleItem = gtk_menu_item_new_with_label(menu_title);
-  gtk_widget_set_sensitive(titleItem, FALSE);
-  GtkWidget *manageItem = gtk_menu_item_new_with_label("Manage");
-  GtkWidget *exitItem = gtk_menu_item_new_with_label("Exit");
-
-  g_signal_connect(G_OBJECT(manageItem), "activate", G_CALLBACK(handle_open), NULL);
-  g_signal_connect(G_OBJECT(exitItem), "activate", G_CALLBACK(tray_exit), NULL);
-
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), titleItem);
+void add_separator_item() {
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), manageItem);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu), exitItem);
-
-  gtk_widget_show_all(menu);
-
-  return menu;
 }
 
 typedef void* (*app_indicator_new_fun)(const gchar*, const gchar*, AppIndicatorCategory);
@@ -82,8 +68,6 @@ void create_indicator(void *handle)
     fprintf(stderr, "Failed to create temp file for icon\n");
   }
 
-  GtkWidget* menu = create_menu();
-
   AppIndicator *indicator = app_indicator_new (menu_title,
                                  tmpIconNameBuf,
                                  APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
@@ -94,7 +78,6 @@ void create_indicator(void *handle)
 
 static void tray_icon_on_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer user_data)
 {
-    GtkWidget *menu = create_menu();
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 0, gtk_get_current_event_time());
 }
 
@@ -113,30 +96,36 @@ void create_status_icon()
     gtk_status_icon_set_visible(tray_icon, TRUE);
 }
 
-void set_url(const char* theUrl) {
-  url = theUrl;
-}
-
-void native_loop(const char* title, unsigned char *imageData, unsigned int imageDataLen)
+void init(const char* title, unsigned char *imageData, unsigned int imageDataLen)
 {
     int argc = 0;
     char *argv[] = { "" };
+    gtk_init(&argc, (char***)&argv);
 
     menu_title = title;
     icon = imageData;
     iconSize = imageDataLen;
-
-    gtk_init(&argc, (char***)&argv);
+    menu = gtk_menu_new();
     void *handle;
 
+    // check if system has libappindicator
     handle = dlopen("libappindicator.so", RTLD_LAZY);
     if(!handle) {
       create_status_icon();
     } else {
       create_indicator(handle);
     }
+}
 
-    gtk_main ();
+void native_loop()
+{
+  gtk_widget_show_all(menu);
+  gtk_main ();
+}
+
+void exit_loop()
+{
+  gtk_main_quit();
 }
 
 
