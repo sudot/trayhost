@@ -7,28 +7,51 @@
 #define MAX_LOADSTRING 100
 
 HINSTANCE hInst;
+HMENU hSubMenu;
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 wchar_t *titleWide;
-const char *url;
 NOTIFYICONDATA nid;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
-void set_url(const char* theUrl)
+extern void tray_callback(int itemId);
+
+void add_separator_item()
 {
-    url = theUrl;
+    AppendMenuW(hSubMenu, MF_SEPARATOR, 0, NULL);
 }
 
-void native_loop(const char *title, unsigned char *imageData, unsigned int imageDataLen)
+void add_menu_item(int id, const char* title, int disabled)
+{
+    wchar_t *titleW = (wchar_t*)calloc(strlen(title) + 1, sizeof(wchar_t));
+    UINT uFlags = MF_STRING;
+    if (disabled == TRUE) {
+        uFlags |= MF_GRAYED;
+    }
+    mbstowcs(titleW, title, strlen(title));
+    AppendMenuW(hSubMenu, uFlags, id, titleW);
+}
+
+void native_loop()
+{
+    MSG msg;
+    // Main message loop:
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+void init(const char *title, unsigned char *imageData, unsigned int imageDataLen)
 {
     HWND hWnd;
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
-    MSG msg;
-
+    // get thish shit into windows whide chars or whatever
     titleWide = (wchar_t*)calloc(strlen(title) + 1, sizeof(wchar_t));
     mbstowcs(titleWide, title, strlen(title));
 
@@ -92,12 +115,12 @@ void native_loop(const char *title, unsigned char *imageData, unsigned int image
 
     Shell_NotifyIcon(NIM_ADD, &nid);
 
-    // Main message loop:
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+    hSubMenu = CreatePopupMenu();
+}
+
+void exit_loop() {
+    Shell_NotifyIcon(NIM_DELETE, &nid);
+    PostQuitMessage(0);
 }
 
 
@@ -142,39 +165,13 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
     return hWnd;
 }
 
-#define CMD_OPEN_IN_BROWSER 1001
-#define CMD_COPY_LINK 1002
-#define CMD_EXIT 1003
-
 void ShowMenu(HWND hWnd)
 {
-    HMENU hSubMenu = CreatePopupMenu();
     POINT p;
     GetCursorPos(&p);
-
-    hSubMenu = CreatePopupMenu();
-    AppendMenuW(hSubMenu, MF_STRING | MF_GRAYED, CMD_OPEN_IN_BROWSER, titleWide);
-    AppendMenuW(hSubMenu, MF_SEPARATOR, 0, NULL);
-    if (url)
-    {
-        AppendMenuW(hSubMenu, MF_STRING, CMD_OPEN_IN_BROWSER, L"Manage");
-        // AppendMenuW(hSubMenu, MF_STRING, CMD_COPY_LINK, L"Copy Link to Clipboard");
-    }
-    AppendMenuW(hSubMenu, MF_STRING, CMD_EXIT, L"Exit");
     SetForegroundWindow(hWnd); // Win32 bug work-around
     TrackPopupMenu(hSubMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, p.x, p.y, 0, hWnd, NULL);
 
-}
-
-void Exit()
-{
-    Shell_NotifyIcon(NIM_DELETE, &nid);
-    PostQuitMessage(0);
-}
-
-void OpenInBrowser()
-{
-    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWDEFAULT);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -182,30 +179,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case CMD_EXIT:
-                    Exit();
-                    break;
-                case CMD_OPEN_IN_BROWSER:
-                    OpenInBrowser();
-                    break;
-                case CMD_COPY_LINK:
-                {
-                    const size_t len = strlen(url) + 1;
-                    HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
-                    memcpy(GlobalLock(hMem), url, len);
-                    GlobalUnlock(hMem);
-                    OpenClipboard(0);
-                    EmptyClipboard();
-                    SetClipboardData(CF_TEXT, hMem);
-                    CloseClipboard();
-                }
-                break;
-            }
+            tray_callback(LOWORD(wParam));
             break;
         case WM_DESTROY:
-            Exit();
+            exit_loop();
             break;
         case WM_MYMESSAGE:
             switch(lParam)
@@ -214,7 +191,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     ShowMenu(hWnd);
                     break;
                 case WM_LBUTTONUP:
-                    OpenInBrowser();
+                    tray_callback(-1);
                     break;
                 default:
                     return DefWindowProc(hWnd, message, wParam, lParam);

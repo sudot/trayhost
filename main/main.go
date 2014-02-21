@@ -39,7 +39,7 @@ func main() {
 			trayhost.Exit,
 		}}
 
-	trayhost.Initialize("My Go App", iconData, menuItems)
+	trayhost.Initialize("Neki", iconData, menuItems)
 
 	// Enter the host system's event loop
 	trayhost.EnterLoop()
