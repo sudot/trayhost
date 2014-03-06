@@ -6,6 +6,7 @@ import "C"
 
 import (
 	"syscall"
+	"unsafe"
 )
 
 func addMenuItem(id int, item MenuItem) {

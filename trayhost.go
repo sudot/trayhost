@@ -83,7 +83,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 	C.init(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
 
 	for id, item := range menuItems {
-		addMenuItem(id, item)
+		AddMenuItem(id, item)
 	}
 
 }
