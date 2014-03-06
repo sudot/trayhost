@@ -30,7 +30,6 @@ package trayhost
 
 import (
 	"reflect"
-	"syscall"
 	"unsafe"
 )
 
@@ -99,13 +98,18 @@ func Exit() {
 	C.exit_loop()
 }
 
-func addMenuItem(id int, item MenuItem) {
+func CAddMenuItem(id C.int, title *C.char, disabled C.int) {
+	C.add_menu_item(id, title, disabled)
+}
+
+func AddMenuItem(id int, item MenuItem) {
 	if item.Title == "" {
 		C.add_separator_item()
 	} else {
 		// ignore errors
-		titlePtr, _ := syscall.UTF16PtrFromString(item.Title)
-		C.add_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
+		addMenuItem(id, item)
+		// titlePtr, _ := syscall.UTF16PtrFromString(item.Title)
+		// C.add_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
 	}
 }
 
