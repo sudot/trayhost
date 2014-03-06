@@ -26,13 +26,11 @@ void add_separator_item()
 
 void add_menu_item(int id, const char* title, int disabled)
 {
-    wchar_t *titleW = (wchar_t*)calloc(strlen(title) + 1, sizeof(wchar_t));
     UINT uFlags = MF_STRING;
     if (disabled == TRUE) {
         uFlags |= MF_GRAYED;
     }
-    mbstowcs(titleW, title, strlen(title));
-    AppendMenuW(hSubMenu, uFlags, id, titleW);
+    AppendMenuW(hSubMenu, uFlags, id, (wchar_t*)title);
 }
 
 void native_loop()
@@ -153,6 +151,8 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    // hWnd = CreateWindowW(L"Krneki", L"Title", WS_OVERLAPPEDWINDOW,
+    //                     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
     if (!hWnd)
     {
