@@ -108,8 +108,8 @@ void init(const char* title, unsigned char *imageData, unsigned int imageDataLen
     menu = gtk_menu_new();
     void *handle;
 
-    // check if system has libappindicator
-    handle = dlopen("libappindicator.so", RTLD_LAZY);
+    // check if system has libappindicator1 package
+    handle = dlopen("libappindicator.so.1", RTLD_LAZY);
     if(!handle) {
       create_status_icon();
     } else {
