@@ -1,4 +1,3 @@
-
 // #cgo CFLAGS: -DDARWIN -x objective-c
 // #cgo LDFLAGS: -framework Cocoa
 #import <Cocoa/Cocoa.h>
@@ -18,7 +17,7 @@ extern void tray_callback(int itemId);
 @end
 
 void add_menu_item(int itemId, const char *title, int disabled) {
-    NSString* manageTitle = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
+    NSString* manageTitle = [NSString stringWithCString:title encoding:NSUTF8StringEncoding];
     NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:manageTitle
                                 action:@selector(manage:) keyEquivalent:@""]
                                 autorelease];
