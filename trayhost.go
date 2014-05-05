@@ -34,7 +34,7 @@ import (
 )
 
 /*
-#cgo linux pkg-config: gtk+-2.0
+#cgo linux pkg-config: gtk+-3.0
 #cgo linux CFLAGS: -DLINUX -I/usr/include/libappindicator-0.1
 #cgo linux LDFLAGS: -ldl
 #cgo windows CFLAGS: -DWIN32
