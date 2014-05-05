@@ -111,13 +111,13 @@ void init(const char* title, unsigned char *imageData, unsigned int imageDataLen
 
     fprintf(stderr, "zoki");
     // check if system has libappindicator1 package
-    handle = dlopen("libappindicator.so.1", RTLD_LAZY);
+    handle = dlopen("libappindicator3.so.1", RTLD_LAZY);
     if(!handle) {
       create_status_icon();
-      fprintf(stderr, "tray");
+      fprintf(stderr, "Using GTK tray\n");
     } else {
       create_indicator(handle);
-      fprintf(stderr, "appinidcator");
+      fprintf(stderr, "Using appinidcator");
     }
 }
 
