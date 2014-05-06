@@ -59,8 +59,6 @@ type MenuItems []MenuItem
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) {
-	menuItems = items
-
 	defer C.free(urlPtr)
 
 	cTitle := C.CString(title)
@@ -82,10 +80,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 	// Initialize menu
 	C.init(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
 
-	for id, item := range menuItems {
-		AddMenuItem(id, item)
-	}
-
+	SetMenu(items)
 }
 
 func EnterLoop() {
@@ -102,15 +97,28 @@ func CAddMenuItem(id C.int, title *C.char, disabled C.int) {
 	C.add_menu_item(id, title, disabled)
 }
 
-func AddMenuItem(id int, item MenuItem) {
+func addMenuItem(id int, item MenuItem) {
 	if item.Title == "" {
 		C.add_separator_item()
 	} else {
-		// ignore errors
-		addMenuItem(id, item)
-		// titlePtr, _ := syscall.UTF16PtrFromString(item.Title)
-		// C.add_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
+		addMenuItemInternal(id, item)
 	}
+}
+
+func SetMenu(menu MenuItems) {
+	menuItems = menu
+	// updateMenu()
+}
+
+func updateMenu() {
+	resetMenu()
+	for id, item := range menuItems {
+		addMenuItem(id, item)
+	}
+}
+
+func resetMenu() {
+	C.reset_menu()
 }
 
 func cbool(b bool) C.int {

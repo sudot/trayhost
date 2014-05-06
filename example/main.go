@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/overlordtm/trayhost"
 	"runtime"
+	"time"
 )
 
 func main() {
@@ -40,6 +41,16 @@ func main() {
 		}}
 
 	trayhost.Initialize("Neki", iconData, menuItems)
+
+	time.AfterFunc(10*time.Second, func() {
+		trayhost.SetMenu(trayhost.MenuItems{trayhost.MenuItem{
+			"ne item",
+			false,
+			func() {
+				fmt.Println("new item")
+			},
+		}})
+	})
 
 	// Enter the host system's event loop
 	trayhost.EnterLoop()

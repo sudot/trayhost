@@ -18,6 +18,15 @@ HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
 extern void tray_callback(int itemId);
+extern void setup_menu();
+
+void reset_menu()
+{
+    if (hSubMenu != NULL) {
+        DestroyMenu(hSubMenu);
+    }
+    hSubMenu = CreatePopupMenu();
+}
 
 void add_separator_item()
 {
@@ -151,8 +160,6 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-    // hWnd = CreateWindowW(L"Krneki", L"Title", WS_OVERLAPPEDWINDOW,
-    //                     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
     if (!hWnd)
     {
@@ -167,6 +174,7 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 void ShowMenu(HWND hWnd)
 {
+    setup_menu();
     POINT p;
     GetCursorPos(&p);
     SetForegroundWindow(hWnd); // Win32 bug work-around
