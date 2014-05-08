@@ -35,7 +35,7 @@ void add_menu_item(int id, const char* title, int disabled)
     menu_item_info.cbSize = sizeof(MENUITEMINFO);
     
     BOOL alreadyExists = GetMenuItemInfoW(hSubMenu, id, FALSE, &menu_item_info);
-    menu_item_info.fMask = MIIM_STRING | MIIM_DATA;
+    menu_item_info.fMask = MIIM_STRING | MIIM_DATA | MIIM_FTYPE;
 
     if (title != NULL && title[0] == '\0') {
         menu_item_info.fType = MFT_SEPARATOR;
@@ -44,6 +44,7 @@ void add_menu_item(int id, const char* title, int disabled)
     }
 
     if (disabled == TRUE) {
+        menu_item_info.fMask = menu_item_info.fMask | MIIM_STATE;
         menu_item_info.fState = MFS_GRAYED;
     }
     
