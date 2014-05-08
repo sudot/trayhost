@@ -34,8 +34,8 @@ import (
 )
 
 /*
-#cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
-#cgo linux CFLAGS: -DLINUX
+#cgo linux pkg-config: gtk+-3.0
+#cgo linux CFLAGS: -DLINUX -I/usr/include/libappindicator3-0.1/
 #cgo linux LDFLAGS: -ldl
 #cgo windows CFLAGS: -DWIN32
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
@@ -55,7 +55,7 @@ type MenuItem struct {
 	Handler  func()
 }
 
-type MenuItems []MenuItem
+type MenuItems map[int]MenuItem
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) {
@@ -80,7 +80,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 	// Initialize menu
 	C.init(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
 
-	SetMenu(items)
+	setMenu(items)
 }
 
 func EnterLoop() {
@@ -97,28 +97,20 @@ func CAddMenuItem(id C.int, title *C.char, disabled C.int) {
 	C.add_menu_item(id, title, disabled)
 }
 
-func addMenuItem(id int, item MenuItem) {
-	if item.Title == "" {
-		C.add_separator_item()
-	} else {
-		addMenuItemInternal(id, item)
-	}
+func setMenu(menu MenuItems) {
+	menuItems = menu
+	updateMenu()
 }
 
-func SetMenu(menu MenuItems) {
-	menuItems = menu
-	// updateMenu()
+func UpdateMenuItem(id int, item MenuItem) {
+	menuItems[id] = item
+	addMenuItem(id, item)
 }
 
 func updateMenu() {
-	resetMenu()
 	for id, item := range menuItems {
 		addMenuItem(id, item)
 	}
-}
-
-func resetMenu() {
-	C.reset_menu()
 }
 
 func cbool(b bool) C.int {

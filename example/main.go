@@ -12,29 +12,29 @@ func main() {
 	runtime.LockOSThread()
 
 	menuItems := trayhost.MenuItems{
-		trayhost.MenuItem{
+		0: trayhost.MenuItem{
 			"Ime",
 			true,
 			nil,
 		},
-		trayhost.MenuItem{
+		1: trayhost.MenuItem{
 			"",
 			true,
 			nil,
 		},
-		trayhost.MenuItem{
+		2: trayhost.MenuItem{
 			"Item A",
 			false,
 			func() {
 				fmt.Println("item A")
 			},
 		},
-		trayhost.MenuItem{
+		3: trayhost.MenuItem{
 			"Item B",
 			false,
 			nil,
 		},
-		trayhost.MenuItem{
+		4: trayhost.MenuItem{
 			"Exit",
 			false,
 			trayhost.Exit,
@@ -42,15 +42,18 @@ func main() {
 
 	trayhost.Initialize("Neki", iconData, menuItems)
 
-	time.AfterFunc(10*time.Second, func() {
-		trayhost.SetMenu(trayhost.MenuItems{trayhost.MenuItem{
-			"ne item",
-			false,
-			func() {
-				fmt.Println("new item")
-			},
-		}})
-	})
+	go func() {
+		for now := range time.Tick(1 * time.Second) {
+			text := fmt.Sprintf("%v", now)
+			trayhost.UpdateMenuItem(99, trayhost.MenuItem{
+				text,
+				true,
+				func() {
+					fmt.Println("new item", text)
+				},
+			})
+		}
+	}()
 
 	// Enter the host system's event loop
 	trayhost.EnterLoop()
