@@ -141,10 +141,8 @@ void init(const char* title, unsigned char *imageData, unsigned int imageDataLen
     appindicator_handle = dlopen("libappindicator3.so.1", RTLD_LAZY);
     if(appindicator_handle == NULL) {
       create_status_icon();
-      fprintf(stderr, "Using GTK tray\n");
     } else {
       create_indicator(appindicator_handle);
-      fprintf(stderr, "Using appinidcator3\n");
     }
 }
 
