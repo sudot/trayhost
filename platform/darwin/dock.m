@@ -1,6 +1,3 @@
-
-// #cgo CFLAGS: -DDARWIN -x objective-c -fobjc-no-arc
-// #cgo LDFLAGS: -framework Cocoa
 #import <Cocoa/Cocoa.h>
 
 NSMenu* appMenu;
