@@ -19,30 +19,31 @@ extern void tray_callback(int itemId);
 @end
 
 @interface UpdateHandler : NSObject
-+ (IBAction)test:(id)sender;
++ (IBAction)update:(id)sender;
 @end
 
 @implementation UpdateHandler
-+ (IBAction)test:(id)sender {
-    // NSLog(@"test %@", sender);
++ (IBAction)update:(id)sender {
 
-    int itemId = [[sender objectAtIndex: 0] intValue];
-    NSString* manageTitle = [sender objectAtIndex: 1];
-    BOOL enabled = (BOOL)[sender objectAtIndex: 2];
+    int itemId = [[[sender objectAtIndex: 0] autorelease] intValue];
+    NSString* manageTitle = [[sender objectAtIndex: 1] autorelease];
+    BOOL enabled = ![[sender objectAtIndex: 2] boolValue];
 
     NSMenuItem* menuItem = [appMenu itemWithTag: itemId];
 
     if (menuItem == nil) {
-        menuItem = [[[NSMenuItem alloc] initWithTitle: manageTitle
+        if ([manageTitle length] == 0) {
+            menuItem = [NSMenuItem separatorItem];
+        } else {
+            menuItem = [[[NSMenuItem alloc] initWithTitle: manageTitle
                                 action:@selector(manage:) keyEquivalent:@""] autorelease];
-        NSLog(@"Create item %@", menuItem);
-        [menuItem setRepresentedObject:[NSNumber numberWithInt:itemId]];
-        [menuItem setTarget:[ManageHandler class]];
-        [menuItem setTag: itemId];
-        [menuItem setEnabled: enabled];
+            [menuItem setRepresentedObject:[NSNumber numberWithInt:itemId]];
+            [menuItem setTarget:[ManageHandler class]];
+            [menuItem setTag: itemId];
+            [menuItem setEnabled: enabled];
+        }
         [appMenu addItem: menuItem];
     } else {
-        NSLog(@"Update item %@", menuItem);
         [menuItem setTitle: manageTitle];
         [menuItem setEnabled: enabled];
     }
@@ -51,11 +52,9 @@ extern void tray_callback(int itemId);
 @end
 
 void add_menu_item(int itemId, const char *title, int disabled) {
-
-    // [UpdateHandler test:nil];
      
     NSArray *data = [NSArray arrayWithObjects: [[NSNumber numberWithInt: itemId] autorelease], [[NSString stringWithUTF8String: title] autorelease], [[NSNumber numberWithBool:(BOOL)disabled] autorelease], nil];
-    [[NSRunLoop mainRunLoop] performSelector:@selector(test:) target:[UpdateHandler class] argument:data order:1 modes:[NSArray arrayWithObjects: NSRunLoopCommonModes, NSEventTrackingRunLoopMode, nil]];
+    [[NSRunLoop mainRunLoop] performSelector:@selector(update:) target:[UpdateHandler class] argument:data order:1 modes:[NSArray arrayWithObjects: NSRunLoopCommonModes, NSEventTrackingRunLoopMode, nil]];
 
 }
 
