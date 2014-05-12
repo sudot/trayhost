@@ -9,15 +9,17 @@ import "C"
 //export tray_callback
 func tray_callback(itemId C.int) {
 
-	if itemId > -1 {
-		item := menuItems[itemId]
+	id := int(itemId)
 
-		if item.Handler != nil {
-			item.Handler()
-		} else {
-			fmt.Println("no handler")
-		}
-	} else {
+	menuItem, has := menuItems[id]
+
+	if id == -1 {
 		fmt.Println("Tray click")
+	}
+
+	if has && menuItem.Handler != nil {
+		menuItem.Handler()
+	} else {
+		fmt.Println("No handler")
 	}
 }

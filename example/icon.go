@@ -1,3 +1,5 @@
+// +build !windows
+
 package main
 
 var iconData []byte = []byte{

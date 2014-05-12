@@ -34,8 +34,8 @@ import (
 )
 
 /*
-#cgo linux pkg-config: gtk+-2.0
-#cgo linux CFLAGS: -DLINUX -I/usr/include/libappindicator-0.1
+#cgo linux pkg-config: gtk+-3.0
+#cgo linux CFLAGS: -DLINUX -I/usr/include/libappindicator3-0.1/
 #cgo linux LDFLAGS: -ldl
 #cgo windows CFLAGS: -DWIN32
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
@@ -55,12 +55,10 @@ type MenuItem struct {
 	Handler  func()
 }
 
-type MenuItems []MenuItem
+type MenuItems map[int]MenuItem
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) {
-	menuItems = items
-
 	defer C.free(urlPtr)
 
 	cTitle := C.CString(title)
@@ -82,10 +80,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 	// Initialize menu
 	C.init(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
 
-	for id, item := range menuItems {
-		AddMenuItem(id, item)
-	}
-
+	setMenu(items)
 }
 
 func EnterLoop() {
@@ -102,14 +97,19 @@ func CAddMenuItem(id C.int, title *C.char, disabled C.int) {
 	C.add_menu_item(id, title, disabled)
 }
 
-func AddMenuItem(id int, item MenuItem) {
-	if item.Title == "" {
-		C.add_separator_item()
-	} else {
-		// ignore errors
+func setMenu(menu MenuItems) {
+	menuItems = menu
+	updateMenu()
+}
+
+func UpdateMenuItem(id int, item MenuItem) {
+	menuItems[id] = item
+	addMenuItem(id, item)
+}
+
+func updateMenu() {
+	for id, item := range menuItems {
 		addMenuItem(id, item)
-		// titlePtr, _ := syscall.UTF16PtrFromString(item.Title)
-		// C.add_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
 	}
 }
 

@@ -19,18 +19,44 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
 extern void tray_callback(int itemId);
 
-void add_separator_item()
+void reset_menu()
 {
-    AppendMenuW(hSubMenu, MF_SEPARATOR, 0, NULL);
+    if (hSubMenu != NULL) {
+        DestroyMenu(hSubMenu);
+    }
+    hSubMenu = CreatePopupMenu();
 }
 
 void add_menu_item(int id, const char* title, int disabled)
 {
-    UINT uFlags = MF_STRING;
-    if (disabled == TRUE) {
-        uFlags |= MF_GRAYED;
+
+    MENUITEMINFOW menu_item_info;
+    memset(&menu_item_info, 0, sizeof(MENUITEMINFO));
+    menu_item_info.cbSize = sizeof(MENUITEMINFO);
+    
+    BOOL alreadyExists = GetMenuItemInfoW(hSubMenu, id, FALSE, &menu_item_info);
+    menu_item_info.fMask = MIIM_STRING | MIIM_DATA | MIIM_FTYPE;
+
+    if (title != NULL && title[0] == '\0') {
+        menu_item_info.fType = MFT_SEPARATOR;
+    } else {
+        menu_item_info.fType = MFT_STRING;
     }
-    AppendMenuW(hSubMenu, uFlags, id, (wchar_t*)title);
+
+    if (disabled == TRUE) {
+        menu_item_info.fMask = menu_item_info.fMask | MIIM_STATE;
+        menu_item_info.fState = MFS_GRAYED;
+    }
+    
+    menu_item_info.dwTypeData = (wchar_t*)title;
+
+    if (alreadyExists == TRUE) {
+        SetMenuItemInfoW(hSubMenu, id, FALSE, &menu_item_info);
+    } else {
+        menu_item_info.fMask = menu_item_info.fMask | MIIM_ID;
+        menu_item_info.wID = id;
+        InsertMenuItemW(hSubMenu, id, FALSE, &menu_item_info);
+    }
 }
 
 void native_loop()
@@ -151,8 +177,6 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-    // hWnd = CreateWindowW(L"Krneki", L"Title", WS_OVERLAPPEDWINDOW,
-    //                     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
     if (!hWnd)
     {
