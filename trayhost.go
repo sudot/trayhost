@@ -31,6 +31,7 @@ package trayhost
 import (
 	"reflect"
 	"runtime"
+	"sort"
 	"unsafe"
 )
 
@@ -48,7 +49,7 @@ import "C"
 
 var isExiting bool
 var menuItems MenuItems
-var UpdateCh = make(chan MenuItemUpdate, 0)
+var UpdateCh = make(chan MenuItemUpdate, 99)
 
 type MenuItem struct {
 	Title    string
@@ -113,7 +114,17 @@ func cAddMenuItem(id C.int, title *C.char, disabled C.int) {
 
 func setMenu(menu MenuItems) {
 	menuItems = menu
-	for id, item := range menuItems {
+
+	menuItemOrder := make([]int, 0, len(menuItems))
+
+	for key, _ := range menuItems {
+		menuItemOrder = append(menuItemOrder, key)
+	}
+
+	sort.Ints(menuItemOrder)
+
+	for id := range menuItemOrder {
+		item := menuItems[id]
 		addMenuItem(id, item)
 	}
 }
