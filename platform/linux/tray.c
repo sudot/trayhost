@@ -59,7 +59,7 @@ void add_menu_item(int id, const char* title, int disabled) {
   }
 
   GtkWidget *item = NULL;
-  if (title == "") {
+  if (title != NULL && title[0] == '\0') {
     item = gtk_separator_menu_item_new();
   } else {
     item = gtk_menu_item_new_with_label(title);
