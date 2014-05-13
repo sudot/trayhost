@@ -13,7 +13,7 @@ func main() {
 
 	menuItems := trayhost.MenuItems{
 		0: trayhost.MenuItem{
-			"Ime",
+			"Trayhost",
 			true,
 			nil,
 		},
@@ -40,18 +40,25 @@ func main() {
 			trayhost.Exit,
 		}}
 
-	trayhost.Initialize("Neki", iconData, menuItems)
+	trayhost.Initialize("Some name", iconData, menuItems)
 
 	go func() {
 		for now := range time.Tick(1 * time.Second) {
-			text := fmt.Sprintf("%v", now)
-			trayhost.UpdateMenuItem(99, trayhost.MenuItem{
-				text,
-				true,
+			trayhost.UpdateCh <- trayhost.MenuItemUpdate{2, trayhost.MenuItem{
+				fmt.Sprintf("zoki %v", now),
+				false,
 				func() {
-					fmt.Println("new item", text)
+					fmt.Println("zoki")
 				},
-			})
+			}}
+
+			trayhost.UpdateCh <- trayhost.MenuItemUpdate{3, trayhost.MenuItem{
+				fmt.Sprintf("boki %v", now),
+				false,
+				func() {
+					fmt.Println("boki")
+				},
+			}}
 		}
 	}()
 

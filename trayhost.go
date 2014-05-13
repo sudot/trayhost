@@ -46,7 +46,6 @@ import (
 import "C"
 
 var isExiting bool
-var urlPtr unsafe.Pointer
 var menuItems MenuItems
 var UpdateCh chan MenuItemUpdate
 
@@ -65,7 +64,6 @@ type MenuItems map[int]MenuItem
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) {
-	defer C.free(urlPtr)
 
 	UpdateCh = make(chan MenuItemUpdate, 0)
 	cTitle := C.CString(title)
@@ -93,7 +91,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 func EnterLoop() {
 	go func() {
 		for update := range UpdateCh {
-			UpdateMenuItem(update.ItemId, update.Item)
+			updateMenuItem(update.ItemId, update.Item)
 		}
 	}()
 	C.native_loop()
@@ -105,24 +103,20 @@ func Exit() {
 	C.exit_loop()
 }
 
-func CAddMenuItem(id C.int, title *C.char, disabled C.int) {
+func cAddMenuItem(id C.int, title *C.char, disabled C.int) {
 	C.add_menu_item(id, title, disabled)
 }
 
 func setMenu(menu MenuItems) {
 	menuItems = menu
-	updateMenu()
-}
-
-func UpdateMenuItem(id int, item MenuItem) {
-	menuItems[id] = item
-	addMenuItem(id, item)
-}
-
-func updateMenu() {
 	for id, item := range menuItems {
 		addMenuItem(id, item)
 	}
+}
+
+func updateMenuItem(id int, item MenuItem) {
+	menuItems[id] = item
+	addMenuItem(id, item)
 }
 
 func cbool(b bool) C.int {
