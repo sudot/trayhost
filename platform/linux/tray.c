@@ -48,7 +48,6 @@ void add_menu_item(int id, const char* title, int disabled) {
   GList *list_item = NULL;
   for (list_item = gtk_container_get_children(GTK_CONTAINER(menu)); list_item != NULL; list_item = list_item->next) {
     if (id == GPOINTER_TO_INT(g_object_get_data(G_OBJECT(list_item->data), "item-id"))) {
-      fprintf(stderr, "Updating existing item %d\n", id);
       gtk_menu_item_set_label(GTK_MENU_ITEM(list_item->data), title);
       gtk_widget_set_sensitive(GTK_WIDGET(list_item->data), !disabled);
       gtk_widget_show(GTK_WIDGET(list_item->data));
@@ -62,8 +61,6 @@ void add_menu_item(int id, const char* title, int disabled) {
   } else {
     item = gtk_menu_item_new_with_label(title);
   }
-
-  fprintf(stderr, "Creating new item %d\n", id);
 
   if (disabled == TRUE) {
      gtk_widget_set_sensitive(GTK_WIDGET(item), FALSE);
