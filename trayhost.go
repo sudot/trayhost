@@ -47,7 +47,7 @@ import "C"
 
 var isExiting bool
 var menuItems MenuItems
-var UpdateCh chan MenuItemUpdate
+var UpdateCh = make(chan MenuItemUpdate, 99)
 
 type MenuItem struct {
 	Title    string
@@ -65,7 +65,6 @@ type MenuItems map[int]MenuItem
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) {
 
-	UpdateCh = make(chan MenuItemUpdate, 0)
 	cTitle := C.CString(title)
 	defer C.free(unsafe.Pointer(cTitle))
 
@@ -89,11 +88,7 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 }
 
 func EnterLoop() {
-	go func() {
-		for update := range UpdateCh {
-			updateMenuItem(update.ItemId, update.Item)
-		}
-	}()
+	go updater()
 	C.native_loop()
 	// If reached, user clicked Exit
 	isExiting = true
@@ -101,6 +96,12 @@ func EnterLoop() {
 
 func Exit() {
 	C.exit_loop()
+}
+
+func updater() {
+	for update := range UpdateCh {
+		updateMenuItem(update.ItemId, update.Item)
+	}
 }
 
 func cAddMenuItem(id C.int, title *C.char, disabled C.int) {
