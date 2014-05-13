@@ -30,6 +30,7 @@ package trayhost
 
 import (
 	"reflect"
+	"runtime"
 	"unsafe"
 )
 
@@ -47,7 +48,7 @@ import "C"
 
 var isExiting bool
 var menuItems MenuItems
-var UpdateCh = make(chan MenuItemUpdate, 99)
+var UpdateCh = make(chan MenuItemUpdate, 0)
 
 type MenuItem struct {
 	Title    string
@@ -99,12 +100,14 @@ func Exit() {
 }
 
 func updater() {
+	runtime.UnlockOSThread()
 	for update := range UpdateCh {
 		updateMenuItem(update.ItemId, update.Item)
 	}
 }
 
 func cAddMenuItem(id C.int, title *C.char, disabled C.int) {
+	defer C.free(unsafe.Pointer(title))
 	C.add_menu_item(id, title, disabled)
 }
 

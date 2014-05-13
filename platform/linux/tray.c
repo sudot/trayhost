@@ -50,11 +50,8 @@ void add_menu_item(int id, const char* title, int disabled) {
     if (id == GPOINTER_TO_INT(g_object_get_data(G_OBJECT(list_item->data), "item-id"))) {
       fprintf(stderr, "Updating existing item %d\n", id);
       gtk_menu_item_set_label(GTK_MENU_ITEM(list_item->data), title);
-      if (disabled == TRUE) {
-        gtk_widget_set_sensitive(GTK_WIDGET(list_item->data), FALSE);
-      }
+      gtk_widget_set_sensitive(GTK_WIDGET(list_item->data), !disabled);
       gtk_widget_show(GTK_WIDGET(list_item->data));
-      gtk_widget_queue_draw(GTK_WIDGET(menu));
       return;
     }
   }
@@ -67,14 +64,15 @@ void add_menu_item(int id, const char* title, int disabled) {
   }
 
   fprintf(stderr, "Creating new item %d\n", id);
-  
+
   if (disabled == TRUE) {
      gtk_widget_set_sensitive(GTK_WIDGET(item), FALSE);
   }
+
   g_object_set_data(G_OBJECT(item), "item-id", GINT_TO_POINTER(id));
   g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_tray_callback), GINT_TO_POINTER(id));
-  gtk_widget_show(GTK_WIDGET(item));
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+  gtk_widget_show(GTK_WIDGET(item));
 }
 
 void create_indicator(void *appindicator_handle)

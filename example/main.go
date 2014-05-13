@@ -43,7 +43,7 @@ func main() {
 	trayhost.Initialize("Some name", iconData, menuItems)
 
 	go func() {
-		for now := range time.Tick(3 * time.Second) {
+		for now := range time.Tick(1 * time.Second) {
 			trayhost.UpdateCh <- trayhost.MenuItemUpdate{2, trayhost.MenuItem{
 				fmt.Sprintf("zoki %v", now),
 				false,
@@ -51,6 +51,12 @@ func main() {
 					fmt.Println("zoki")
 				},
 			}}
+
+		}
+	}()
+
+	go func() {
+		for now := range time.Tick(1 * time.Second) {
 
 			trayhost.UpdateCh <- trayhost.MenuItemUpdate{3, trayhost.MenuItem{
 				fmt.Sprintf("boki %v", now),
