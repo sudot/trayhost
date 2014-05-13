@@ -48,11 +48,17 @@ import "C"
 var isExiting bool
 var urlPtr unsafe.Pointer
 var menuItems MenuItems
+var UpdateCh chan MenuItemUpdate
 
 type MenuItem struct {
 	Title    string
 	Disabled bool
 	Handler  func()
+}
+
+type MenuItemUpdate struct {
+	ItemId int
+	Item   MenuItem
 }
 
 type MenuItems map[int]MenuItem
@@ -61,6 +67,7 @@ type MenuItems map[int]MenuItem
 func Initialize(title string, imageData []byte, items MenuItems) {
 	defer C.free(urlPtr)
 
+	UpdateCh = make(chan MenuItemUpdate, 0)
 	cTitle := C.CString(title)
 	defer C.free(unsafe.Pointer(cTitle))
 
@@ -84,6 +91,11 @@ func Initialize(title string, imageData []byte, items MenuItems) {
 }
 
 func EnterLoop() {
+	go func() {
+		for update := range UpdateCh {
+			UpdateMenuItem(update.ItemId, update.Item)
+		}
+	}()
 	C.native_loop()
 	// If reached, user clicked Exit
 	isExiting = true
