@@ -139,7 +139,12 @@ void init(const char* title, unsigned char *imageData, unsigned int imageDataLen
     reset_menu();
 
     // check if system has libappindicator1 package
-    appindicator_handle = dlopen("libappindicator3.so.1", RTLD_LAZY);
+    appindicator_handle = dlopen("libappindicator.so.1", RTLD_LAZY);
+    if (appindicator_handle == NULL) {
+      // try libappindicator3
+      appindicator_handle = dlopen("libappindicator3.so.1", RTLD_LAZY);
+    }
+
     if(appindicator_handle == NULL) {
       create_status_icon();
     } else {
