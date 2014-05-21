@@ -44,13 +44,22 @@ void _tray_callback(GtkMenuItem *item, gpointer user_data)
   tray_callback(GPOINTER_TO_INT(user_data));
 }
 
-void add_menu_item(int id, const char* title, int disabled) {
+void add_menu_item(int id, const char* title2, int disabled) {
+
+  static char* title = NULL;
+  char* oldtitle = title;
+  title = strdup(title2);
+
+  GList *items = gtk_container_get_children(GTK_CONTAINER(menu));
   GList *list_item = NULL;
-  for (list_item = gtk_container_get_children(GTK_CONTAINER(menu)); list_item != NULL; list_item = list_item->next) {
+  for (list_item = items; list_item != NULL; list_item = list_item->next) {
     if (id == GPOINTER_TO_INT(g_object_get_data(G_OBJECT(list_item->data), "item-id"))) {
       gtk_menu_item_set_label(GTK_MENU_ITEM(list_item->data), title);
       gtk_widget_set_sensitive(GTK_WIDGET(list_item->data), !disabled);
       gtk_widget_show(GTK_WIDGET(list_item->data));
+      g_list_free(items);
+      if (oldtitle != NULL)
+        free(oldtitle);
       return;
     }
   }
@@ -70,6 +79,12 @@ void add_menu_item(int id, const char* title, int disabled) {
   g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_tray_callback), GINT_TO_POINTER(id));
   gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
   gtk_widget_show(GTK_WIDGET(item));
+
+  if (oldtitle != NULL)
+    free(oldtitle);
+
+  if (items != NULL)
+    g_list_free(items);
 }
 
 void create_indicator(void *appindicator_handle)
