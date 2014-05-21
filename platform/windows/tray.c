@@ -27,8 +27,13 @@ void reset_menu()
     hSubMenu = CreatePopupMenu();
 }
 
-void add_menu_item(int id, const char* title, int disabled)
+void add_menu_item(int id, const char* title2, int disabled)
 {
+
+    static wchar_t* title =  NULL;
+    wchar_t *oldtitle = title;
+
+    title = _wcsdup((wchar_t*)title2);
 
     MENUITEMINFOW menu_item_info;
     memset(&menu_item_info, 0, sizeof(MENUITEMINFO));
@@ -57,6 +62,9 @@ void add_menu_item(int id, const char* title, int disabled)
         menu_item_info.wID = id;
         InsertMenuItemW(hSubMenu, id, FALSE, &menu_item_info);
     }
+
+    if(oldtitle != NULL)
+        free(oldtitle);
 }
 
 void native_loop()
@@ -74,6 +82,7 @@ void init(const char *title, unsigned char *imageData, unsigned int imageDataLen
 {
     HWND hWnd;
     HINSTANCE hInstance = GetModuleHandle(NULL);
+
 
     // get thish shit into windows whide chars or whatever
     titleWide = (wchar_t*)calloc(strlen(title) + 1, sizeof(wchar_t));

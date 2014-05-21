@@ -68,11 +68,11 @@ type MenuItems map[int]MenuItem
 func Initialize(title string, imageData []byte, items MenuItems) {
 
 	cTitle := C.CString(title)
-	defer C.free(unsafe.Pointer(cTitle))
+	// defer C.free(unsafe.Pointer(cTitle))
 
 	// Copy the image data into unmanaged memory
 	cImageData := C.malloc(C.size_t(len(imageData)))
-	defer C.free(cImageData)
+	// defer C.free(cImageData)
 	var cImageDataSlice []C.uchar
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&cImageDataSlice))
 	sliceHeader.Cap = len(imageData)
@@ -108,7 +108,7 @@ func updater() {
 }
 
 func cAddMenuItem(id C.int, title *C.char, disabled C.int) {
-	defer C.free(unsafe.Pointer(title))
+	// defer C.free(unsafe.Pointer(title))
 	C.add_menu_item(id, title, disabled)
 }
 
