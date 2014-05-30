@@ -30,6 +30,14 @@ const (
 	ICON_ATTENTION   = iota
 )
 
+const (
+	WINDOWS       = iota
+	OSX           = iota
+	GNOME         = iota
+	UNITY         = iota
+	LINUX_GENERIC = iota
+)
+
 type MenuItem struct {
 	Title    string
 	Disabled bool
@@ -59,21 +67,10 @@ func Initialize(name string, imageData []byte, items MenuItems) (err error) {
 	defer C.free(unsafe.Pointer(cName))
 
 	// Initialize menu
-	C.init(cName)
-	initPlatformSpecific()
+	C.init(cName, (C.int)(getDesktop()))
 	SetIcon(ICON_PRIMARY)
 	setMenu(items)
 	return
-}
-
-func initIndicator() {
-	log.Println("Initializing libappindicator tray")
-	C.init_indicator()
-}
-
-func initGtk() {
-	log.Println("Initializing GTK tray")
-	C.init_gtk()
 }
 
 func SetIconImage(iconId int, imageData []byte) (err error) {

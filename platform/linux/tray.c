@@ -109,7 +109,7 @@ void set_icon(const char *iconName)
   }
 }
 
-void init(const char* name)
+void init(const char* name, int desktop)
 {
     int argc = 0;
     char *argv[] = { "" };
@@ -117,15 +117,30 @@ void init(const char* name)
 
     tray_name = strdup(name);
     reset_menu();
+
+    if (desktop == 2) { //GNOME
+      init_gtk();
+    }
+
+    if (desktop == 3) { //Unity
+      init_indicator();
+    }
+
+    if (desktop == 4) { //generic
+      if (init_indicator() != 0) {
+        init_gtk();
+      }
+    }
 }
 
-void init_gtk() {
-  printf("Using GTK\n");
+int init_gtk() {
+  go_log("Using GTK\n");
   create_status_icon();
+  return 0;
 }
 
-void init_indicator() {
-  printf("Using libappindicator\n");
+int init_indicator() {
+  go_log("Using libappindicator\n");
   // check if system has libappindicator1 package
   appindicator_handle = dlopen("libappindicator.so.1", RTLD_LAZY);
   if (appindicator_handle == NULL) {
@@ -139,8 +154,10 @@ void init_indicator() {
     dl_app_indicator_set_menu = dlsym(appindicator_handle, "app_indicator_set_menu");
     dl_app_indicator_set_icon = dlsym(appindicator_handle, "app_indicator_set_icon");
     create_indicator();
+    return 0;
   } else {
     go_log("Failed to load libappindicator shared library (via dlopen)");
+    return 1;
   }
 }
 
