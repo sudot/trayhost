@@ -1,25 +1,34 @@
 package trayhost
 
-import (
-	"fmt"
-)
-
 import "C"
+import (
+	"log"
+)
 
 //export tray_callback
 func tray_callback(itemId C.int) {
 
 	id := int(itemId)
-
-	menuItem, has := menuItems[id]
+	menuItem, hasItem := menuItems[id]
 
 	if id == -1 {
-		fmt.Println("Tray click")
+		log.Println("Tray click")
+		if clickHandler != nil {
+			clickHandler()
+		}
 	}
 
-	if has && menuItem.Handler != nil {
-		menuItem.Handler()
-	} else {
-		fmt.Println("No handler")
+	if hasItem {
+		if menuItem.Handler != nil {
+			menuItem.Handler()
+		} else {
+			log.Printf("Item %s has no handler", menuItem.Title)
+		}
+
 	}
+}
+
+//export go_log
+func go_log(msg *C.char) {
+	log.Printf("cgo: %s", C.GoString(msg))
 }
