@@ -1,9 +1,8 @@
 #import <Cocoa/Cocoa.h>
 
 NSMenu* appMenu;
+NSStatusItem* statusItem;
 NSAutoreleasePool *pool;
-
-extern void tray_callback(int itemId);
 
 @interface ManageHandler : NSObject
 + (IBAction)manage:(id)sender;
@@ -48,11 +47,30 @@ extern void tray_callback(int itemId);
 }
 @end
 
-void add_menu_item(int itemId, const char *title, int disabled) {
+void set_menu_item(int itemId, const char *title, int disabled) {
      
     NSArray *data = [NSArray arrayWithObjects: [[NSNumber numberWithInt: itemId] autorelease], [[NSString stringWithUTF8String: title] autorelease], [[NSNumber numberWithBool:(BOOL)disabled] autorelease], nil];
     [[NSRunLoop mainRunLoop] performSelector:@selector(update:) target:[UpdateHandler class] argument:data order:1 modes:[NSArray arrayWithObjects: NSRunLoopCommonModes, NSEventTrackingRunLoopMode, nil]];
 
+}
+
+void set_icon(const char *iconPth) {
+
+    NSString *iconPath = [[NSString stringWithUTF8String: iconPth] autorelease];
+    NSString *iconName = [iconPath lastPathComponent];
+
+    NSImage *icon = [NSImage imageNamed: iconName];
+    if (icon == nil) {
+        icon = [[[NSImage alloc] initWithContentsOfFile: iconPath] autorelease];
+        NSSize size;
+        size.width = 18;
+        size.height = 18;
+        [icon setScalesWhenResized: YES];
+        [icon setSize: size];
+        [icon setName: iconName];
+    }
+
+    [statusItem setImage: icon];
 }
 
 void native_loop() {
@@ -63,10 +81,9 @@ void exit_loop() {
     [NSApp stop:nil];
 }
 
-int init(const char *title, unsigned char imageDataBytes[], unsigned int imageDataLen) {
+int init(const char *title, int desktop) {
 
     pool = [NSAutoreleasePool new];
-    // pool = [[NSAutoreleasePool alloc] init];
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
@@ -74,12 +91,8 @@ int init(const char *title, unsigned char imageDataBytes[], unsigned int imageDa
     appMenu = [[NSMenu new] autorelease];
     [appMenu setAutoenablesItems: NO];
 
-    NSData *iconData = [NSData dataWithBytes:imageDataBytes length:imageDataLen];
-    NSImage *icon = [[NSImage alloc] initWithData:iconData];
-
-    NSStatusItem* statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
+    statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
     [statusItem setMenu:appMenu];
-    [statusItem setImage:icon];
     [statusItem setHighlightMode:NO];
 
     return 0;
