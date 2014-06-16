@@ -111,7 +111,6 @@ void init(const char *go_title)
     nid.uCallbackMessage = WM_MYMESSAGE; 
     nid.uFlags = NIF_TIP | NIF_MESSAGE;
 
-    go_log("add_icon");
     Shell_NotifyIcon(NIM_ADD, &nid);
     reset_menu();
 }
