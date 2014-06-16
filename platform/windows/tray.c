@@ -8,13 +8,10 @@
 #define TRAYHOST_ICON_ID 100
 #define MAX_LOADSTRING 100
 
-// HINSTANCE hInst;
 HWND hWnd;
 HMENU hSubMenu;
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
-// wchar_t *title;
-NOTIFYICONDATA nid;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
@@ -120,6 +117,9 @@ void init(const char *go_title)
 }
 
 void exit_loop() {
+    NOTIFYICONDATA nid;
+    nid.uID = TRAYHOST_ICON_ID;
+    nid.hWnd = hWnd;
     Shell_NotifyIcon(NIM_DELETE, &nid);
     PostQuitMessage(0);
 }

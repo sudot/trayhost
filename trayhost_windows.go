@@ -31,7 +31,3 @@ func setIcon(iconPth string) {
 	defer C.free(unsafe.Pointer(cIconPth))
 	C.set_icon((*C.char)(unsafe.Pointer(cIconPth)))
 }
-
-func getDesktop() int {
-	return WINDOWS
-}
