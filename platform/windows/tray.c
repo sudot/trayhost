@@ -1,22 +1,26 @@
 #include <stdio.h>
 #include <windows.h>
 #include <shellapi.h>
+#include <strsafe.h>
+#include <tchar.h>
 
 #define WM_MYMESSAGE (WM_USER + 1)
-
+#define TRAYHOST_ICON_ID 100
 #define MAX_LOADSTRING 100
 
-HINSTANCE hInst;
+// HINSTANCE hInst;
+HWND hWnd;
 HMENU hSubMenu;
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
-wchar_t *titleWide;
+// wchar_t *title;
 NOTIFYICONDATA nid;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
+extern void go_log(char*);
 extern void tray_callback(int itemId);
 
 void reset_menu()
@@ -27,8 +31,9 @@ void reset_menu()
     hSubMenu = CreatePopupMenu();
 }
 
-void add_menu_item(int id, const char* title, int disabled)
+void set_menu_item(int id, const char* go_title, int disabled)
 {
+    LPTSTR title = (LPTSTR)go_title;
 
     MENUITEMINFOW menu_item_info;
     memset(&menu_item_info, 0, sizeof(MENUITEMINFO));
@@ -48,15 +53,30 @@ void add_menu_item(int id, const char* title, int disabled)
         menu_item_info.fState = MFS_GRAYED;
     }
     
-    menu_item_info.dwTypeData = (wchar_t*)title;
+    menu_item_info.dwTypeData = title;
 
     if (alreadyExists == TRUE) {
-        SetMenuItemInfoW(hSubMenu, id, FALSE, &menu_item_info);
+        SetMenuItemInfo(hSubMenu, id, FALSE, &menu_item_info);
     } else {
         menu_item_info.fMask = menu_item_info.fMask | MIIM_ID;
         menu_item_info.wID = id;
-        InsertMenuItemW(hSubMenu, id, FALSE, &menu_item_info);
+        InsertMenuItem(hSubMenu, id, FALSE, &menu_item_info);
     }
+}
+
+void set_icon(const char *go_iconPth)
+{
+    LPCTSTR iconPth = (LPCTSTR)go_iconPth;
+
+    NOTIFYICONDATA nid;
+    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.uID = TRAYHOST_ICON_ID;
+    nid.hWnd = hWnd;
+    nid.hIcon = LoadImage(NULL, iconPth, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+    nid.uFlags = NIF_ICON;
+
+    Shell_NotifyIcon(NIM_MODIFY, &nid);
 }
 
 void native_loop()
@@ -70,17 +90,13 @@ void native_loop()
     }
 }
 
-void init(const char *title, unsigned char *imageData, unsigned int imageDataLen)
+void init(const char *go_title)
 {
-    HWND hWnd;
+    LPCTSTR title = (LPCTSTR)go_title;
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
-    // get thish shit into windows whide chars or whatever
-    titleWide = (wchar_t*)calloc(strlen(title) + 1, sizeof(wchar_t));
-    mbstowcs(titleWide, title, strlen(title));
-
-    wcscpy((wchar_t*)szTitle, titleWide);
-    wcscpy((wchar_t*)szWindowClass, (wchar_t*)TEXT("MyClass"));
+    StringCchCopy(szTitle, MAX_LOADSTRING, title);
+    StringCchCopy(szWindowClass, MAX_LOADSTRING, L"MyClass");
     MyRegisterClass(hInstance);
 
     hWnd = InitInstance(hInstance, FALSE); // Don't show window
@@ -89,57 +105,18 @@ void init(const char *title, unsigned char *imageData, unsigned int imageDataLen
         return;
     }
 
-    // Let's load up the tray icon
-    HICON hIcon;
-    {
-        // This is really hacky, but LoadImage won't let me load an image from memory.
-        // So we have to write out a temporary file, load it from there, then delete the file.
-
-        // From http://msdn.microsoft.com/en-us/library/windows/desktop/aa363875.aspx
-        TCHAR szTempFileName[MAX_PATH+1];
-        TCHAR lpTempPathBuffer[MAX_PATH+1];
-        int dwRetVal = GetTempPath(MAX_PATH+1,        // length of the buffer
-                                   lpTempPathBuffer); // buffer for path
-        if (dwRetVal > MAX_PATH+1 || (dwRetVal == 0))
-        {
-            return; // Failure
-        }
-
-        //  Generates a temporary file name.
-        int uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
-                                      TEXT("_tmpicon"), // temp file name prefix
-                                      0,                // create unique name
-                                      szTempFileName);  // buffer for name
-        if (uRetVal == 0)
-        {
-            return; // Failure
-        }
-
-        // Dump the icon to the temp file
-        FILE* fIcon = fopen(szTempFileName, "wb");
-        fwrite(imageData, 1, imageDataLen, fIcon);
-        fclose(fIcon);
-        fIcon = NULL;
-
-        // Load the image from the file
-        hIcon = LoadImage(NULL, szTempFileName, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
-
-        // Delete the temp file
-        remove(szTempFileName);
-    }
-
+    NOTIFYICONDATA nid;
+    memset(&nid, 0, sizeof(NOTIFYICONDATA));
     nid.cbSize = sizeof(NOTIFYICONDATA);
+    StringCchCopy(nid.szTip, 64, szTitle);
+    nid.uID = TRAYHOST_ICON_ID;
     nid.hWnd = hWnd;
-    nid.uID = 100;
-    nid.uCallbackMessage = WM_MYMESSAGE;
-    nid.hIcon = hIcon;
+    nid.uCallbackMessage = WM_MYMESSAGE; 
+    nid.uFlags = NIF_TIP | NIF_MESSAGE;
 
-    strcpy(nid.szTip, title); // MinGW seems to use ANSI
-    nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-
+    go_log("add_icon");
     Shell_NotifyIcon(NIM_ADD, &nid);
-
-    hSubMenu = CreatePopupMenu();
+    reset_menu();
 }
 
 void exit_loop() {
@@ -171,9 +148,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-    HWND hWnd;
-
-    hInst = hInstance;
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);

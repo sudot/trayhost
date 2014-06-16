@@ -9,14 +9,13 @@ import (
 	"os"
 	"runtime"
 	"sort"
-	"unsafe"
 )
 
 /*
 #cgo linux pkg-config: gtk+-2.0
 #cgo linux CFLAGS: -DLINUX -I/usr/include/libappindicator-0.1/
 #cgo linux LDFLAGS: -ldl
-#cgo windows CFLAGS: -DWIN32
+#cgo windows CFLAGS: -DWIN32 -DUNICODE
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
 #cgo darwin LDFLAGS: -framework Cocoa
 #include <stdlib.h>
@@ -59,15 +58,17 @@ var tmpFiles []string = make([]string, 0, 3)
 var clickHandler func()
 
 // Run the host system's event loop
-func Initialize(name string, imageData []byte, items MenuItems) (err error) {
+func Initialize(title string, imageData []byte, items MenuItems) (err error) {
 
 	SetIconImage(ICON_PRIMARY, imageData)
 
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
+	// cName := C.CString(name)
+	// defer C.free(unsafe.Pointer(cName))
 
-	// Initialize menu
-	C.init(cName, (C.int)(getDesktop()))
+	// // Initialize menu
+	// C.init(cName, (C.int)(getDesktop()))
+
+	initialize(title)
 	SetIcon(ICON_PRIMARY)
 	setMenu(items)
 	return
@@ -105,11 +106,8 @@ func SetIcon(iconId int) (err error) {
 		return
 	}
 
-	cIconPth := C.CString(iconPth)
-	defer C.free(unsafe.Pointer(cIconPth))
-
-	C.set_icon(cIconPth)
 	log.Printf("Setting icon %s (id: %d)", iconPth, iconId)
+	setIcon(iconPth)
 	return
 }
 
@@ -175,7 +173,10 @@ func cbool(b bool) C.int {
 	}
 }
 
-func cSetMenuItem(id C.int, title *C.char, disabled C.int) {
-	C.set_menu_item(id, title, disabled)
-	C.free(unsafe.Pointer(title))
-}
+// func cSetMenuItem(id C.int, title *C.char, disabled C.int) {
+// 	C.set_menu_item(id, title, disabled)
+// }
+
+// func cSetIcon(iconPth *C.char) {
+// 	C.set_icon(iconPth)
+// }

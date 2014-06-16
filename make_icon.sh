@@ -26,11 +26,11 @@ fi
 
 OUTPUT=iconunix.go
 echo Generating $OUTPUT
-echo "//+build linux darwin" > $OUTPUT
-echo >> $OUTPUT
-cat $1 | $GOPATH/bin/2goarray iconData main >> $OUTPUT
+echo "//+build linux darwin" > "$OUTPUT"
+echo >> "$OUTPUT"
+cat $1 | "$GOPATH/bin/2goarray" iconData main >> "$OUTPUT"
 if [ $? -ne 0 ]; then
-    echo Failure generating $OUTPUT
+    echo Failure generating "$OUTPUT"
     exit
 fi
 echo Finished
