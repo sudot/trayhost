@@ -6,6 +6,16 @@ import (
 	"os"
 )
 
+import (
+	"unsafe"
+)
+
+/*
+#include <stdlib.h>
+#include "platform/trayhost_linux.h"
+*/
+import "C"
+
 func getDesktop() int {
 	currentDesktop := os.Getenv("XDG_CURRENT_DESKTOP")
 

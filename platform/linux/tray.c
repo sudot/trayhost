@@ -100,7 +100,6 @@ void create_status_icon()
 
 void set_icon(const char *iconName)
 {
-  go_log("Set icon");
   if (tray_icon != NULL) {
     gtk_status_icon_set_from_file(tray_icon, iconName);
   }
@@ -134,13 +133,11 @@ void init(const char* name, int desktop)
 }
 
 int init_gtk() {
-  go_log("Using GTK\n");
   create_status_icon();
   return 0;
 }
 
 int init_indicator() {
-  go_log("Using libappindicator\n");
   // check if system has libappindicator1 package
   appindicator_handle = dlopen("libappindicator.so.1", RTLD_LAZY);
   if (appindicator_handle == NULL) {

@@ -59,15 +59,7 @@ var clickHandler func()
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) (err error) {
-
 	SetIconImage(ICON_PRIMARY, imageData)
-
-	// cName := C.CString(name)
-	// defer C.free(unsafe.Pointer(cName))
-
-	// // Initialize menu
-	// C.init(cName, (C.int)(getDesktop()))
-
 	initialize(title)
 	SetIcon(ICON_PRIMARY)
 	setMenu(items)
@@ -172,11 +164,3 @@ func cbool(b bool) C.int {
 		return 0
 	}
 }
-
-// func cSetMenuItem(id C.int, title *C.char, disabled C.int) {
-// 	C.set_menu_item(id, title, disabled)
-// }
-
-// func cSetIcon(iconPth *C.char) {
-// 	C.set_icon(iconPth)
-// }
