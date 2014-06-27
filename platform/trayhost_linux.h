@@ -1,1 +1,0 @@
-void init(char* title, int desktop);

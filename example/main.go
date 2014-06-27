@@ -35,37 +35,36 @@ func main() {
 			nil,
 		},
 		4: trayhost.MenuItem{
-			fmt.Sprintf("Time: %v", time.Now()),
-			false,
-			nil,
-		},
-		5: trayhost.MenuItem{
 			"Exit",
 			false,
 			trayhost.Exit,
 		}}
 
-	trayhost.Initialize("Trayhost example", iconData, menuItems)
-	trayhost.SetClickHandler(onClick)
-	trayhost.SetIconImage(trayhost.ICON_ALTERNATIVE, iconData2)
-	trayhost.SetIconImage(trayhost.ICON_ATTENTION, iconData3)
+	trayhost.Initialize("Some name", iconData, menuItems)
 
 	go func() {
 		for now := range time.Tick(1 * time.Second) {
-			trayhost.UpdateCh <- trayhost.MenuItemUpdate{4, trayhost.MenuItem{
-				fmt.Sprintf("Time: %v", now),
+			trayhost.UpdateCh <- trayhost.MenuItemUpdate{2, trayhost.MenuItem{
+				fmt.Sprintf("zoki %v", now),
 				false,
-				nil,
-			},
-			}
+				func() {
+					fmt.Println("zoki")
+				},
+			}}
+
 		}
 	}()
 
 	go func() {
-		for _ = range time.Tick(10 * time.Second) {
-			trayhost.SetIcon(trayhost.ICON_ALTERNATIVE)
-			time.Sleep(5 * time.Second)
-			trayhost.SetIcon(trayhost.ICON_ATTENTION)
+		for now := range time.Tick(1 * time.Second) {
+
+			trayhost.UpdateCh <- trayhost.MenuItemUpdate{3, trayhost.MenuItem{
+				fmt.Sprintf("boki %v", now),
+				false,
+				func() {
+					fmt.Println("boki")
+				},
+			}}
 		}
 	}()
 
@@ -74,8 +73,4 @@ func main() {
 
 	// This is only reached once the user chooses the Exit menu item
 	fmt.Println("Exiting")
-}
-
-func onClick() {
-	fmt.Println("You clicked tray icon")
 }

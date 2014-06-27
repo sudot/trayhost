@@ -11,7 +11,7 @@
 #elif defined WIN32
 #include "windows/tray.c"
 #elif defined DARWIN
-#include "darwin/tray.m"
+#include "darwin/dock.m"
 #endif
 
 #endif // PLATFORM_H
