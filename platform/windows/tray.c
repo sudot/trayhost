@@ -10,8 +10,8 @@
 
 HWND hWnd;
 HMENU hSubMenu;
-TCHAR szTitle[MAX_LOADSTRING];
-TCHAR szWindowClass[MAX_LOADSTRING];
+LPTSTR szTitle;
+LPTSTR szWindowClass;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
@@ -95,10 +95,13 @@ void native_loop()
 
 void init(const char *go_title)
 {
-    LPCTSTR title = (LPCTSTR)go_title;
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
-    StringCchCopy(szTitle, MAX_LOADSTRING, title);
+    szTitle = (LPTSTR)calloc(MAX_LOADSTRING, sizeof(TCHAR));
+    szWindowClass = (LPTSTR)calloc(MAX_LOADSTRING, sizeof(TCHAR));
+
+    // StringCchCopy(szTitle, MAX_LOADSTRING, (LPCTSTR)go_title);
+    StringCchCopy(szTitle, MAX_LOADSTRING, L"Lme");
     StringCchCopy(szWindowClass, MAX_LOADSTRING, L"MyClass");
     MyRegisterClass(hInstance);
 
