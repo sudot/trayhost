@@ -100,8 +100,7 @@ void init(const char *go_title)
     szTitle = (LPTSTR)calloc(MAX_LOADSTRING, sizeof(TCHAR));
     szWindowClass = (LPTSTR)calloc(MAX_LOADSTRING, sizeof(TCHAR));
 
-    // StringCchCopy(szTitle, MAX_LOADSTRING, (LPCTSTR)go_title);
-    StringCchCopy(szTitle, MAX_LOADSTRING, L"Lme");
+    StringCchCopy(szTitle, MAX_LOADSTRING, (LPCTSTR)go_title);
     StringCchCopy(szWindowClass, MAX_LOADSTRING, L"MyClass");
     MyRegisterClass(hInstance);
 
