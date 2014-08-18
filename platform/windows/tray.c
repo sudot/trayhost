@@ -6,7 +6,7 @@
 
 #define WM_MYMESSAGE (WM_USER + 1)
 #define TRAYHOST_ICON_ID 100
-#define MAX_LOADSTRING 100
+#define MAX_LOADSTRING 255
 
 HWND hWnd;
 HMENU hSubMenu;
@@ -30,7 +30,9 @@ void reset_menu()
 
 void set_menu_item(int id, const char* go_title, int disabled)
 {
-    LPTSTR title = (LPTSTR)go_title;
+
+    LPTSTR title = (LPTSTR)calloc(MAX_LOADSTRING, sizeof(TCHAR));
+    StringCchCopy(title, MAX_LOADSTRING, (LPTSTR)go_title);
 
     MENUITEMINFOW menu_item_info;
     memset(&menu_item_info, 0, sizeof(MENUITEMINFO));
@@ -50,6 +52,10 @@ void set_menu_item(int id, const char* go_title, int disabled)
         menu_item_info.fState = MFS_GRAYED;
     }
     
+    if (menu_item_info.dwTypeData != NULL) {
+        free(menu_item_info.dwTypeData);
+    }
+
     menu_item_info.dwTypeData = title;
 
     if (alreadyExists == TRUE) {
