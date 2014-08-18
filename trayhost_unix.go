@@ -12,10 +12,11 @@ import (
 */
 import "C"
 
-func setMenuItem(id int, item MenuItem) {
+func setMenuItem(id int, item MenuItem) (err error) {
 	cTitle := C.CString(item.Title)
 	defer C.free(unsafe.Pointer(cTitle))
 	C.set_menu_item((C.int)(id), cTitle, cbool(item.Disabled))
+	return nil
 }
 
 func setIcon(iconPth string) {

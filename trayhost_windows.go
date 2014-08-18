@@ -20,10 +20,14 @@ func initialize(title string) {
 	C.init((*C.char)(unsafe.Pointer(titlePtr)))
 }
 
-func setMenuItem(id int, item MenuItem) {
-	titlePtr, _ := syscall.UTF16PtrFromString(item.Title)
+func setMenuItem(id int, item MenuItem) (err error) {
+	titlePtr, err := syscall.UTF16PtrFromString(item.Title)
+	if err != nil {
+		return
+	}
 	defer C.free(unsafe.Pointer(titlePtr))
 	C.set_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
+	return
 }
 
 func setIcon(iconPth string) {
