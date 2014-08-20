@@ -57,6 +57,7 @@ var icons = map[int]string{}
 var tmpFiles []string = make([]string, 0, 3)
 var clickHandler func()
 var Debug bool = false
+var curIconId int = -1
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) (err error) {
@@ -96,14 +97,17 @@ func Exit() {
 
 func SetIcon(iconId int) (err error) {
 
-	iconPth, ok := icons[iconId]
-	if !ok {
-		err = fmt.Errorf("No icon with icon id %d", iconId)
-		return
-	}
+	if iconId != curIconId {
+		iconPth, ok := icons[iconId]
+		if !ok {
+			err = fmt.Errorf("No icon with icon id %d", iconId)
+			return
+		}
 
-	log.Printf("Setting icon %s (id: %d)", iconPth, iconId)
-	setIcon(iconPth)
+		log.Printf("Setting icon %s (id: %d)", iconPth, iconId)
+		setIcon(iconPth)
+		curIconId = iconId
+	}
 	return
 }
 
