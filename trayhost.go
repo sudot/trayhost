@@ -56,9 +56,13 @@ var UpdateCh = make(chan MenuItemUpdate, 99)
 var icons = map[int]string{}
 var tmpFiles []string = make([]string, 0, 3)
 var clickHandler func()
+var Debug bool = false
 
 // Run the host system's event loop
 func Initialize(title string, imageData []byte, items MenuItems) (err error) {
+	if !Debug {
+		log.SetOutput(ioutil.Discard)
+	}
 	SetIconImage(ICON_PRIMARY, imageData)
 	initialize(title)
 	SetIcon(ICON_PRIMARY)
