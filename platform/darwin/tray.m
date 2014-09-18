@@ -2,28 +2,27 @@
 
 NSMenu* appMenu;
 NSStatusItem* statusItem;
-NSAutoreleasePool *pool;
 
 @interface ManageHandler : NSObject
-+ (IBAction)manage:(id)sender;
++ (void)manage:(id)sender;
 @end
 
 @implementation ManageHandler
-+ (IBAction)manage:(id)sender {
++ (void)manage:(id)sender {
     tray_callback([[sender representedObject] intValue]);
 }
 @end
 
 @interface UpdateHandler : NSObject
-+ (IBAction)update:(id)sender;
++ (void)update:(id)sender;
 @end
 
 @implementation UpdateHandler
-+ (IBAction)update:(id)sender {
++ (void)update:(id)sender {
 
     int itemId = [[[sender objectAtIndex: 0] autorelease] intValue];
     NSString* manageTitle = [[sender objectAtIndex: 1] autorelease];
-    BOOL enabled = ![[sender objectAtIndex: 2] boolValue];
+    BOOL enabled = ![[[sender objectAtIndex: 2] autorelease] boolValue];
 
     NSMenuItem* menuItem = [appMenu itemWithTag: itemId];
 
@@ -83,7 +82,7 @@ void exit_loop() {
 
 int init(const char *title) {
 
-    pool = [NSAutoreleasePool new];
+    [NSAutoreleasePool new];
 
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];

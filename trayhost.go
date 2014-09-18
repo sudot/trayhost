@@ -142,7 +142,12 @@ func setMenu(menu MenuItems) {
 }
 
 func createTempFile(iconData []byte) (filename string, err error) {
-	file, err := ioutil.TempFile(os.TempDir(), "trayhosticon")
+	dir := os.TempDir()
+	err = os.MkdirAll(dir, os.ModeDir|os.ModePerm)
+	if err != nil {
+		return
+	}
+	file, err := ioutil.TempFile(dir, "trayhosticon")
 	if err != nil {
 		return
 	}
@@ -150,7 +155,6 @@ func createTempFile(iconData []byte) (filename string, err error) {
 	_, err = file.Write(iconData)
 	filename = file.Name()
 	tmpFiles = append(tmpFiles, filename)
-	log.Printf("Temp file created: %s\n", filename)
 	return
 }
 
