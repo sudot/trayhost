@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"runtime"
 	"sort"
 )
 
@@ -95,7 +94,6 @@ func EnterLoop() {
 }
 
 func Exit() {
-	close(UpdateCh)
 	C.exit_loop()
 	cleanup()
 }
@@ -121,7 +119,6 @@ func SetClickHandler(handler func()) {
 }
 
 func menuUpdateLoop() {
-	runtime.UnlockOSThread()
 	for update := range UpdateCh {
 		updateMenuItem(update.ItemId, update.Item)
 	}
