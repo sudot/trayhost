@@ -58,12 +58,14 @@ var tmpFiles []string = make([]string, 0, 3)
 var clickHandler func()
 var Debug bool = false
 var curIconId int = -1
+var tmpDir string
 
 // Run the host system's event loop
-func Initialize(title string, imageData []byte, items MenuItems) (err error) {
+func Initialize(title string, imageData []byte, items MenuItems, tmpDirectory string) (err error) {
 	if !Debug {
 		log.SetOutput(ioutil.Discard)
 	}
+	tmpDir = tmpDirectory
 	SetIconImage(ICON_PRIMARY, imageData)
 	initialize(title)
 	SetIcon(ICON_PRIMARY)
@@ -142,12 +144,11 @@ func setMenu(menu MenuItems) {
 }
 
 func createTempFile(iconData []byte) (filename string, err error) {
-	dir := os.TempDir()
-	err = os.MkdirAll(dir, os.ModeDir|os.ModePerm)
+	err = os.MkdirAll(tmpDir, os.ModeDir|os.ModePerm)
 	if err != nil {
 		return
 	}
-	file, err := ioutil.TempFile(dir, "trayhosticon")
+	file, err := ioutil.TempFile(tmpDir, "trayhosticon")
 	if err != nil {
 		return
 	}

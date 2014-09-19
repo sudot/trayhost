@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/overlordtm/trayhost"
+	"os"
 	"runtime"
 	"time"
 )
@@ -45,7 +46,7 @@ func main() {
 			trayhost.Exit,
 		}}
 
-	trayhost.Initialize("Trayhost example", iconData, menuItems)
+	trayhost.Initialize("Trayhost example", iconData, menuItems, os.TempDir())
 	trayhost.SetClickHandler(onClick)
 	trayhost.SetIconImage(trayhost.ICON_ALTERNATIVE, iconData2)
 	trayhost.SetIconImage(trayhost.ICON_ATTENTION, iconData3)
