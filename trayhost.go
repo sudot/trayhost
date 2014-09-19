@@ -66,9 +66,15 @@ func Initialize(title string, imageData []byte, items MenuItems, tmpDirectory st
 		log.SetOutput(ioutil.Discard)
 	}
 	tmpDir = tmpDirectory
-	SetIconImage(ICON_PRIMARY, imageData)
+	err = SetIconImage(ICON_PRIMARY, imageData)
+	if err != nil {
+		return
+	}
 	initialize(title)
-	SetIcon(ICON_PRIMARY)
+	err = SetIcon(ICON_PRIMARY)
+	if err != nil {
+		return
+	}
 	setMenu(items)
 	return
 }
@@ -83,15 +89,12 @@ func SetIconImage(iconId int, imageData []byte) (err error) {
 }
 
 func EnterLoop() {
-	log.Println("Entering native loop")
 	go menuUpdateLoop()
 	C.native_loop()
-	// If reached, user clicked Exit
 	isExiting = true
 }
 
 func Exit() {
-	log.Println("Exiting native loop")
 	close(UpdateCh)
 	C.exit_loop()
 	cleanup()
