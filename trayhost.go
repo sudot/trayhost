@@ -147,10 +147,6 @@ func setMenu(menu MenuItems) {
 }
 
 func createTempFile(iconData []byte) (filename string, err error) {
-	err = os.MkdirAll(tmpDir, os.ModeDir|os.ModePerm)
-	if err != nil {
-		return
-	}
 	file, err := ioutil.TempFile(tmpDir, "trayhosticon")
 	if err != nil {
 		return
