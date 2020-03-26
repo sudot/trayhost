@@ -24,7 +24,7 @@ func setMenuItem(id int, item MenuItem) (err error) {
 	if err != nil {
 		return
 	}
-	C.set_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cbool(item.Disabled))
+	C.set_menu_item((C.int)(id), (*C.char)(unsafe.Pointer(titlePtr)), cBool(item.Disabled))
 	return
 }
 

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 #include <shellapi.h>
-#include <strsafe.h>
 #include <tchar.h>
+#include <strsafe.h>
 
 #define WM_MYMESSAGE (WM_USER + 1)
 #define TRAYHOST_ICON_ID 100
@@ -17,8 +17,8 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 HWND                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
-extern void go_log(char*);
-extern void tray_callback(int itemId);
+extern void goLog(char*);
+extern void trayCallback(int itemId);
 
 void reset_menu()
 {
@@ -184,7 +184,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_COMMAND:
-            tray_callback(LOWORD(wParam));
+            trayCallback(LOWORD(wParam));
             break;
         case WM_DESTROY:
             exit_loop();
@@ -196,7 +196,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     ShowMenu(hWnd);
                     break;
                 case WM_LBUTTONUP:
-                    tray_callback(-1);
+                    trayCallback(-1);
                     break;
                 default:
                     return DefWindowProc(hWnd, message, wParam, lParam);

@@ -25,7 +25,7 @@ func getDesktop() int {
 	case "GNOME":
 		return GNOME
 	default:
-		return LINUX_GENERIC
+		return LinuxGeneric
 	}
 }
 

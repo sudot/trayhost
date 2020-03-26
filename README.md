@@ -11,31 +11,75 @@ API docs can be found [here](http://godoc.org/github.com/cratonica/trayhost)
 
 The Interesting Part
 ----------------------
-    import (
-        "fmt"
-        "github.com/cratonica/trayhost"
-        "runtime"
-    )
+```go
+package main
 
-    func main() {
-        // EnterLoop must be called on the OS's main thread
-        runtime.LockOSThread()
+import (
+	"fmt"
+	"github.com/sudot/trayhost"
+	"os"
+	"runtime"
+	"time"
+)
 
-        go func() {
-            // Run your application/server code in here. Most likely you will
-            // want to start an HTTP server that the user can hit with a browser
-            // by clicking the tray icon.
+func main() {
+	// EnterLoop must be called on the OS's main thread
+	runtime.LockOSThread()
 
-            // Be sure to call this to link the tray icon to the target url
-            trayhost.SetUrl("http://localhost:8080")
-        }()
+	// 构造菜单项,最终会按 key 的数值从小到大-从上到下排列
+	menuItems := trayhost.MenuItems{
+		0: trayhost.NewMenuItemDisabled("TrayHost"),
+		// Title 为空则为分割线
+		1: trayhost.NewMenuItemDivided(),
+		2: trayhost.NewMenuItem("Item A", func() {
+			fmt.Println("item A")
+		}),
+		3: trayhost.NewMenuItem("Item B", nil),
+		4: trayhost.NewMenuItem(fmt.Sprintf("Time: %v", time.Now()), nil),
+		// Title 为空则为分割线
+		5: trayhost.NewMenuItemDivided(),
+		6: trayhost.NewMenuItem("Exit", trayhost.Exit),
+	}
 
-        // Enter the host system's event loop
-        trayhost.EnterLoop("My Go App", iconData)
+	trayhost.Debug = true
+	_ = trayhost.Initialize("TrayHost example", iconData, menuItems, os.TempDir())
+	trayhost.SetClickHandler(onClick)
+	_ = trayhost.SetIconImage(trayhost.IconAlternative, iconData2)
+	_ = trayhost.SetIconImage(trayhost.IconAttention, iconData3)
 
-        // This is only reached once the user chooses the Exit menu item
-        fmt.Println("Exiting")
-    }
+	go func() {
+		// 更改菜单内容
+		for now := range time.Tick(1 * time.Second) {
+			trayhost.UpdateCh <- trayhost.MenuItemUpdate{
+				ItemId: 4,
+				Item: trayhost.MenuItem{
+					Title: fmt.Sprintf("Time: %v", now),
+				},
+			}
+		}
+	}()
+
+	go func() {
+		// 更换托盘图标
+		for _ = range time.Tick(10 * time.Second) {
+			_ = trayhost.SetIcon(trayhost.IconAlternative)
+			time.Sleep(5 * time.Second)
+			_ = trayhost.SetIcon(trayhost.IconAttention)
+		}
+	}()
+
+	// Enter the host system's event loop
+	trayhost.EnterLoop()
+
+	// This is only reached once the user chooses the Exit menu item
+	fmt.Println("Exiting")
+}
+
+func onClick() {
+	fmt.Println("You clicked tray icon")
+}
+
+```
 
 Build Environment
 --------------------------
@@ -60,13 +104,15 @@ Installing
 -----------
 Once your build environment is configured, go get the library:
 
-    go get github.com/cratonica/trayhost
+```bash
+go get github.com/sudot/trayhost
+```
 
 If all goes well, you shouldn't get any errors.
 
 Using
 -----
-Use the included __example_test.go__ file as a template to get going.  OSX will throw a runtime error if __EnterLoop__ is called on a child thread, so the first thing you must do is lock the OS thread. Your application code will need to run on a child goroutine. __SetUrl__ can be called lazily if you need to take some time to determine what port you are running on. 
+Use the included __example/main.go__ file as a template to get going.  OSX will throw a runtime error if __EnterLoop__ is called on a child thread, so the first thing you must do is lock the OS thread. Your application code will need to run on a child goroutine. __SetUrl__ can be called lazily if you need to take some time to determine what port you are running on. 
 
 Before it will build, you will need to pick an icon for display in the system tray.
 
@@ -78,7 +124,7 @@ Icons are embedded into the application by generating a Go array containing the 
 #### Linux/OSX
 From your project root, run __make_icon.sh__, followed by the path to a __PNG__ file to use. For example:
 
-    $GOPATH/src/github.com/cratonica/trayhost/make_icon.sh ~/Documents/MyIcon.png
+    make_icon.sh example/icons/icon-1-256.png
 
 This will generate a file called __iconunix.go__ and set its build options so it won't be built in Windows.
 
@@ -87,7 +133,7 @@ From the project root, run __make_icon.bat__, followed by the path to a __Window
 
 Example:
 
-    %GOPATH%\src\github.com\cratonica\trayhost\make_icon.bat C:\MyIcon.ico
+    make_icon.bat example/icons/icon-1-256.ico
 
 This will generate a file called __iconwin.go__ and set its build options so it will only be built in Windows.
     

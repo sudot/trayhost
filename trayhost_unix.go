@@ -15,7 +15,7 @@ import "C"
 func setMenuItem(id int, item MenuItem) (err error) {
 	cTitle := C.CString(item.Title)
 	defer C.free(unsafe.Pointer(cTitle))
-	C.set_menu_item((C.int)(id), cTitle, cbool(item.Disabled))
+	C.set_menu_item((C.int)(id), cTitle, cBool(item.Disabled))
 	return nil
 }
 

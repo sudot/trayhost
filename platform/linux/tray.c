@@ -45,7 +45,7 @@ void reset_menu()
 // internal wrapper for go callback
 void _tray_callback(GtkMenuItem *item, gpointer user_data)
 {
-  tray_callback(GPOINTER_TO_INT(user_data));
+  trayCallback(GPOINTER_TO_INT(user_data));
 }
 
 void set_menu_item(int id, const char* title, int disabled)
@@ -153,7 +153,7 @@ int init_indicator() {
     create_indicator();
     return 0;
   } else {
-    go_log("Failed to load libappindicator shared library (via dlopen)");
+    goLog("Failed to load libappindicator shared library (via dlopen)");
     return 1;
   }
 }

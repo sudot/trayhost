@@ -9,7 +9,7 @@ NSStatusItem* statusItem;
 
 @implementation ManageHandler
 + (void)manage:(id)sender {
-    tray_callback([[sender representedObject] intValue]);
+    trayCallback([[sender representedObject] intValue]);
 }
 @end
 
