@@ -1,13 +1,15 @@
 TrayHost
 ========
 
-__TrayHost__ is a library for placing a __Go__ application in the task bar (system tray, notification area, or dock) in a consistent manner across multiple platforms. Currently, there is built-in support for __Windows__, __Mac OSX__, and __Linux__ systems that support GTK+ 3 status icons (including Gnome 2, KDE 4, Cinnamon, MATE and other desktop environments).
+本项目在 [https://github.com/overlordtm/trayhost](https://github.com/overlordtm/trayhost) 上进行了修改，对此表示感谢和敬意。
+
+
+
+__TrayHost__ is a library for placing a __Go__ application in the task bar (system tray, notification area, or dock) in a consistent manner across multiple platforms. Currently, there is built-in support for __Windows__, __Mac OSX__, and __Linux__ systems that support GTK+2 status icons (including Gnome 2, KDE 4, Cinnamon, MATE and other desktop environments).
 
 The intended usage is for applications that utilize web technology for the user interface, but require access to the client system beyond what is offered in a browser sandbox (for instance, an application that requires access to the user's file system).
 
 The library places a tray icon on the host system's task bar that can be used to open a URL, giving users easy access to the web-based user interface. 
-
-API docs can be found [here](http://godoc.org/github.com/cratonica/trayhost)
 
 The Interesting Part
 ----------------------
@@ -17,7 +19,8 @@ package main
 import (
 	"fmt"
 	"github.com/sudot/trayhost"
-	"os"
+	"net/http"
+	"os/exec"
 	"runtime"
 	"time"
 )
@@ -26,63 +29,76 @@ func main() {
 	// EnterLoop must be called on the OS's main thread
 	runtime.LockOSThread()
 
-	// 构造菜单项,最终会按 key 的数值从小到大-从上到下排列
-	menuItems := trayhost.MenuItems{
-		0: trayhost.NewMenuItemDisabled("TrayHost"),
-		// Title 为空则为分割线
-		1: trayhost.NewMenuItemDivided(),
-		2: trayhost.NewMenuItem("Item A", func() {
-			fmt.Println("item A")
-		}),
-		3: trayhost.NewMenuItem("Item B", nil),
-		4: trayhost.NewMenuItem(fmt.Sprintf("Time: %v", time.Now()), nil),
-		// Title 为空则为分割线
-		5: trayhost.NewMenuItemDivided(),
-		6: trayhost.NewMenuItem("Exit", trayhost.Exit),
-	}
-
+	// Debug默认是false,在你的实际使用中不需要这一行代码
 	trayhost.Debug = true
-	_ = trayhost.Initialize("TrayHost example", iconData, menuItems, os.TempDir())
-	trayhost.SetClickHandler(onClick)
-	_ = trayhost.SetIconImage(trayhost.IconAlternative, iconData2)
-	_ = trayhost.SetIconImage(trayhost.IconAttention, iconData3)
+	trayhost.Initialize("TrayHost", "examplepath/icons/", func() {
+		fmt.Println("You clicked tray icon")
+		openUrl()
+	})
+	trayhost.SetIconPath("logo.ico")
+	trayhost.SetMenu(trayhost.MenuItems{
+		trayhost.NewMenuItemDisabled("TrayHost"),
+		trayhost.NewMenuItemDivided(),
+		trayhost.NewMenuItem("在浏览器打开", func() {
+			fmt.Println("在浏览器打开")
+			openUrl()
+		}),
+		trayhost.NewMenuItem("Item B", nil),
+		trayhost.NewMenuItem(fmt.Sprintf("Time: %v", time.Now()), nil),
+		trayhost.NewMenuItemDivided(),
+		trayhost.NewMenuItem("Exit", trayhost.Exit),
+	})
 
 	go func() {
-		// 更改菜单内容
-		for now := range time.Tick(1 * time.Second) {
-			trayhost.UpdateCh <- trayhost.MenuItemUpdate{
-				ItemId: 4,
-				Item: trayhost.MenuItem{
-					Title: fmt.Sprintf("Time: %v", now),
-				},
-			}
-		}
+		// 启动一个 http 服务器
+		_ = http.ListenAndServe(":1234", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write([]byte("TrayHost"))
+		}))
 	}()
 
 	go func() {
-		// 更换托盘图标
+		// 更新菜单项
+		for now := range time.Tick(1 * time.Second) {
+			trayhost.UpdateMenuItem(4, trayhost.NewMenuItem(fmt.Sprintf("Time: %v", now), nil))
+		}
+	}()
+	go func() {
+		// 每10秒更换两次托盘图标
 		for _ = range time.Tick(10 * time.Second) {
-			_ = trayhost.SetIcon(trayhost.IconAlternative)
+			trayhost.SetIconPath("go.ico")
 			time.Sleep(5 * time.Second)
-			_ = trayhost.SetIcon(trayhost.IconAttention)
+			trayhost.SetIconPath("logo.ico")
 		}
 	}()
 
 	// Enter the host system's event loop
 	trayhost.EnterLoop()
 
-	// This is only reached once the user chooses the Exit menu item
 	fmt.Println("Exiting")
 }
 
-func onClick() {
-	fmt.Println("You clicked tray icon")
+func openUrl() {
+	var commands = map[string]string{
+		"windows": "explorer",
+		"darwin":  "open",
+		"linux":   "xdg-open",
+	}
+	run, _ := commands[runtime.GOOS]
+	_ = exec.Command(run, "http://127.0.0.1:1234").Start()
 }
-
 ```
+
+以上示例运行截图：
+
+![1585217310598](README/1585217310598.png)
+
+![1585217247591](README/1585217247591.png)
+
+
 
 Build Environment
 --------------------------
+
 Before continuing, make sure that your GOPATH environment variable is set, and that you have Git and Mercurial installed and that __go__, __git__, and __hg__ are in your PATH.
 
 Cross-compilation is not currently supported, so you will need access to a machine running the platform that you wish to target. 
@@ -112,6 +128,7 @@ If all goes well, you shouldn't get any errors.
 
 Using
 -----
+
 Use the included __example/main.go__ file as a template to get going.  OSX will throw a runtime error if __EnterLoop__ is called on a child thread, so the first thing you must do is lock the OS thread. Your application code will need to run on a child goroutine. __SetUrl__ can be called lazily if you need to take some time to determine what port you are running on. 
 
 Before it will build, you will need to pick an icon for display in the system tray.
@@ -124,7 +141,7 @@ Icons are embedded into the application by generating a Go array containing the 
 #### Linux/OSX
 From your project root, run __make_icon.sh__, followed by the path to a __PNG__ file to use. For example:
 
-    make_icon.sh example/icons/icon-1-256.png
+    make_icon.sh examplepath/icons/logo.png
 
 This will generate a file called __iconunix.go__ and set its build options so it won't be built in Windows.
 
@@ -133,7 +150,7 @@ From the project root, run __make_icon.bat__, followed by the path to a __Window
 
 Example:
 
-    make_icon.bat example/icons/icon-1-256.ico
+    make_icon.bat examplepath/icons/logo.ico
 
 This will generate a file called __iconwin.go__ and set its build options so it will only be built in Windows.
     
@@ -143,3 +160,96 @@ The [editbin](http://msdn.microsoft.com/en-us/library/xd3shwhf.aspx) tool will a
     editbin.exe /SUBSYSTEM:WINDOWS path\to\program.exe
 
 Now when you run the program, you won't see a terminal window.
+
+API
+-----
+
+- `var Debug`
+
+  是否开启调试模式，默认为 `false`。若为 `true` 则会在运行时打印出一些日志信息。
+
+- `type MenuItem struct`
+
+  菜单项结构体。定义如下：
+
+  ```go
+  type MenuItem struct {
+  	Title    string
+  	Disabled bool
+  	Handler  func()
+  }
+  ```
+
+  - `Title    string`
+
+    菜单项的标题。接受任意的字符串内容，若为空字符串，则表示为分割线。
+
+  - `Disabled bool`
+
+    菜单项是否禁用，默认为 `false`。若为 `true` 则表示菜单项被禁用，此菜单项被置灰且点击无回调。
+
+  - `Handler  func()`
+
+    点击菜单项触发的回调函数。
+
+- `type MenuItems []MenuItem`
+
+  菜单集合，用于表示整个菜单的每一个具体项目。
+
+- `func EnterLoop()`
+
+  进入系统事件循环，只有调用此函数后，系统托盘才可以接收点击事件，此函数会阻塞当前进程。
+
+- `func Exit()`
+
+  退出系统，并销毁系统托盘图标，清理产生的临时文件。
+
+- `func Initialize(title string, workDir string, handler func())`
+
+  初始化系统托盘信息。这应该在调用其他函数前调用，所以它是第一个就应该调用的函数。
+
+  此函数每次调用，都会在托盘区域创建一个新的图标，所以此函数仅调用一次。
+
+- `func NewMenuItem(title string, handler func()) MenuItem`
+
+  快捷创建可点击的新菜单项，支持设置标题和回调函数。
+
+  示例：
+
+  ```go
+  trayhost.NewMenuItem("在浏览器打开", fun (){
+  	fmt.Println("You clicked tray icon")
+  })
+  
+  trayhost.NewMenuItem("Item B", nil)
+  
+  trayhost.NewMenuItem("Exit", trayhost.Exit)
+  ```
+
+  
+
+- `func NewMenuItemDisabled(title string) MenuItem`
+
+  快捷创建禁用的菜单项，此菜单项会置灰，且点击无回调。
+
+- `func NewMenuItemDivided() MenuItem`
+
+  快捷创建菜单项分隔符。
+
+- `func SetIconPath(iconPth string)`
+
+  设置系统托盘图片的路径，可以是相对路径，相对于 `workDir` ，若 `workDir` 设置为空，则表示相对于系统当前目录。
+
+- `func SetIconData(imageData []byte)`
+
+  设置系统托盘图片的字节数组内容，此字节数组表示了一张图片。
+
+  在调用此函数后会将字节数组在系统临时目录下写入一个临时的图片文件提供给操作系统底层读取，操作完毕后会立刻删除此临时图片。
+
+- `func SetMenu(menu MenuItems)`
+
+  设置系统托盘菜单，此菜单在接收到鼠标右键点击事件后显示出来。
+
+- `func UpdateMenuItem(index int, item MenuItem)`
+
+  更新系统托盘菜单指定的菜单项，在本项目中菜单项是以数组的方式实现，所以 `index`  表示的是菜单项对应的索引，`item` 是一个新的菜单项，此菜单项会完全替换原有的菜单项。

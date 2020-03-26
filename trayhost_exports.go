@@ -13,13 +13,14 @@ func trayCallback(itemId C.int) {
 		return
 	}
 
-	menuItem, hasItem := menuItems[id]
-	if hasItem {
-		if menuItem.Handler != nil {
-			menuItem.Handler()
-		} else {
-			trayHostLog.Printf("Item %s has no handler", menuItem.Title)
-		}
+	if id < 0 || id >= len(menuItems) {
+		return
+	}
+	menuItem := menuItems[id]
+	if menuItem.Handler != nil {
+		menuItem.Handler()
+	} else {
+		trayHostLog.Printf("Item %s has no handler", menuItem.Title)
 	}
 }
 
