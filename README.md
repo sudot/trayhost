@@ -31,18 +31,16 @@ func main() {
 
 	// Debug默认是false,在你的实际使用中不需要这一行代码
 	trayhost.Debug = true
-	trayhost.Initialize("TrayHost", "examplepath/icons/", func() {
+	trayhost.Initialize("TrayHost", func() {
 		fmt.Println("You clicked tray icon")
 		openUrl()
 	})
-	trayhost.SetIconPath("logo.ico")
+	// 通过图片字节数组设置托盘图标
+	trayhost.SetIconData(iconData)
 	trayhost.SetMenu(trayhost.MenuItems{
 		trayhost.NewMenuItemDisabled("TrayHost"),
 		trayhost.NewMenuItemDivided(),
-		trayhost.NewMenuItem("在浏览器打开", func() {
-			fmt.Println("在浏览器打开")
-			openUrl()
-		}),
+		trayhost.NewMenuItem("在浏览器打开", openUrl),
 		trayhost.NewMenuItem("Item B", nil),
 		trayhost.NewMenuItem(fmt.Sprintf("Time: %v", time.Now()), nil),
 		trayhost.NewMenuItemDivided(),
@@ -65,9 +63,11 @@ func main() {
 	go func() {
 		// 每10秒更换两次托盘图标
 		for _ = range time.Tick(10 * time.Second) {
-			trayhost.SetIconPath("go.ico")
+			// 通过图片路径设置托盘图标
+			trayhost.SetIconPath("example/icons/go.ico")
 			time.Sleep(5 * time.Second)
-			trayhost.SetIconPath("logo.ico")
+			// 通过图片字节数组设置托盘图标
+			trayhost.SetIconData(iconData)
 		}
 	}()
 
@@ -86,6 +86,7 @@ func openUrl() {
 	run, _ := commands[runtime.GOOS]
 	_ = exec.Command(run, "http://127.0.0.1:1234").Start()
 }
+
 ```
 
 以上示例运行截图：
@@ -141,7 +142,7 @@ Icons are embedded into the application by generating a Go array containing the 
 #### Linux/OSX
 From your project root, run __make_icon.sh__, followed by the path to a __PNG__ file to use. For example:
 
-    make_icon.sh examplepath/icons/logo.png
+    make_icon.sh example/icons/logo.png
 
 This will generate a file called __iconunix.go__ and set its build options so it won't be built in Windows.
 
@@ -150,7 +151,7 @@ From the project root, run __make_icon.bat__, followed by the path to a __Window
 
 Example:
 
-    make_icon.bat examplepath/icons/logo.ico
+    make_icon.bat example/icons/logo.ico
 
 This will generate a file called __iconwin.go__ and set its build options so it will only be built in Windows.
     
@@ -204,7 +205,7 @@ API
 
   退出系统，并销毁系统托盘图标，清理产生的临时文件。
 
-- `func Initialize(title string, workDir string, handler func())`
+- `func Initialize(title string, handler func())`
 
   初始化系统托盘信息。这应该在调用其他函数前调用，所以它是第一个就应该调用的函数。
 
@@ -238,7 +239,7 @@ API
 
 - `func SetIconPath(iconPth string)`
 
-  设置系统托盘图片的路径，可以是相对路径，相对于 `workDir` ，若 `workDir` 设置为空，则表示相对于系统当前目录。
+  设置系统托盘图片的路径，可以是相对路径，相对于系统当前目录。
 
 - `func SetIconData(imageData []byte)`
 
@@ -252,4 +253,4 @@ API
 
 - `func UpdateMenuItem(index int, item MenuItem)`
 
-  更新系统托盘菜单指定的菜单项，在本项目中菜单项是以数组的方式实现，所以 `index`  表示的是菜单项对应的索引，`item` 是一个新的菜单项，此菜单项会完全替换原有的菜单项。
+  更新系统托盘菜单指定的菜单项，在本项目中菜单项是以数组的方式实现，所以 `index`  表示的是菜单项对应的索引，`item` 是一个新的菜单项，此菜单项会完全替换原有的菜单项。

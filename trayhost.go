@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 /*
@@ -37,7 +36,6 @@ type MenuItems []MenuItem
 
 var clickHandler func()
 var Debug = false
-var prefixPath string
 var trayHostLog = log.New(os.Stdout, "TrayHost:", log.LstdFlags)
 var menuItems MenuItems
 
@@ -62,10 +60,6 @@ func NewMenuItemDivided() MenuItem {
 // 你可以通过 title 设置鼠标停留在托盘图标上是显示的文字,如果你不想在鼠标停留时出现此文字,可以设置为空字符串 "".
 //
 // 托盘图标当然少不了要一个图片,你可以通过 SetIconPath 指定图片路径,也可以通过 SetIconData 指定图片的字节数组数据.
-// 若你通过 SetIconPath 设置图片,在初始化的时候给 workDir 的值则表示图片所在的目录,当然你也可以让他为空字符串 "".
-// 比如图片路径是 examplepath/icons/icon-1-256.ico,你可以通过设置 workDir 为 examplepath/icons,
-// 然后 SetIconPath 就可以写成 icon-1-256.ico.
-// 若你通过 SetIconData 设置图片,在初始化的时候给 workDir 设置任意值都不影响,因为此时不需要从任何地方读取图片文件.
 //
 // 一些程序的托盘图标在接收到鼠标的点击事件时,可以执行一个任意的操作,你也可以实现这一的功能,通过 handler 来实现即可.
 // 当然 handler 只能接收到鼠标的左键点击响应,因为鼠标的右键点击已经被占用,用来显示 items 里的每一个操作了
@@ -86,13 +80,11 @@ func NewMenuItemDivided() MenuItem {
 // trayhost.EnterLoop()
 //
 // title   是鼠标在托盘图标上停留一段时间后显示的文字
-// workDir 是托盘图标的路径或者说是通过图片数据写入图片的临时目录,可以是相对路径,也可以是绝对路径
 // handler 是在托盘图标上点击鼠标左键时触发的回调
-func Initialize(title string, workDir string, handler func()) {
+func Initialize(title string, handler func()) {
 	if !Debug {
 		trayHostLog.SetOutput(ioutil.Discard)
 	}
-	prefixPath = workDir
 	clickHandler = handler
 	initialize(title)
 }
@@ -106,7 +98,6 @@ func Exit() {
 
 // 更新系统托盘的图标
 func SetIconPath(iconPth string) {
-	iconPth = filepath.Join(prefixPath, iconPth)
 	trayHostLog.Printf("Setting icon %s", iconPth)
 	setIcon(iconPth)
 }
